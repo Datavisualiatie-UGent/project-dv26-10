@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,10 +6,30 @@
     <title>Exploring Exoplanets Through Data</title>
 
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 
 <body>
     <main>
+        <div class="container">
+            <h1>Exoplanet Discovery Methods</h1>
+            <p class="lead">How do we actually find these distant worlds?</p>
+            
+            <div class="note" style="margin-bottom: 2rem;">
+                <p><strong>Interactive Timeline:</strong> Drag the handles left or right to filter by year. 
+                <strong>Click the "Other" bar</strong> to zoom in and see a breakdown of the rarer discovery methods!</p>
+            </div>
+            
+            <div id="timeline-container" style="margin-bottom: 20px;"></div>
+            
+            <div style="margin-bottom: 10px; height: 35px;">
+                <button id="back-btn" class="btn btn-primary" style="display: none; cursor: pointer; padding: 5px 15px; border-radius: 5px; border: none; background-color: var(--accent-blue, #2563eb); color: white; font-weight: bold;">
+                    &larr; Back to main view
+                </button>
+            </div>
+
+            <div id="bar-chart-container"></div>
+        </div>
 
     </main>
 
@@ -18,5 +38,6 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script src="js/detected_per_method_years.js"></script>
 </body>
 </html>

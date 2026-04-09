@@ -1,0 +1,99 @@
+/* --- 1. CSS VARIABLES --- */
+:root {
+    /* Colors */
+    --bg-color: #f4f7f6;
+    --container-bg: #ffffff;
+    --text-main: #2c3e50;
+    --text-muted: #7f8c8d;
+    --bar-color: #4CAF50;
+    --bar-hover: #45a049;
+    --grid-line: #e0e0e0;
+    
+    /* Typography */
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- 2. GLOBAL STYLES --- */
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 40px 20px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: var(--container-bg);
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+h1, h2, h3 {
+    margin-top: 0;
+    color: var(--text-main);
+}
+
+p {
+    color: var(--text-muted);
+}
+
+/* --- 3. D3 CHART SPECIFIC STYLES --- */
+.chart-title {
+    font-size: 18px;
+    font-weight: bold;
+    fill: var(--text-main);
+}
+
+.axis-label {
+    font-size: 12px;
+    fill: var(--text-muted);
+}
+
+.domain, .tick line {
+    stroke: var(--grid-line);
+}
+
+.area-cumulative {
+    fill: var(--text-muted, #94a3b8);
+    opacity: 0.3;
+}
+
+.line-cumulative {
+    fill: none;
+    stroke: var(--text-muted, #64748b);
+    stroke-width: 2px;
+}
+
+/* --- BRUSH & SLIDER STYLES --- */
+.selection {
+    fill: var(--accent-blue, #2563eb);
+    fill-opacity: 0.15;
+    stroke: var(--accent-blue, #2563eb);
+    stroke-width: 2px;
+}
+
+.handle--custom {
+    fill: #ffffff;
+    stroke: var(--text-muted, #64748b);
+    stroke-width: 1.5px;
+    cursor: ew-resize;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.handle-grip {
+    stroke: var(--text-muted, #64748b);
+    stroke-width: 1px;
+    pointer-events: none;
+}
+
+.bar-rect {
+    transition: filter 0.2s;
+}
+
+.bar-clickable:hover {
+    filter: brightness(0.85);
+}
