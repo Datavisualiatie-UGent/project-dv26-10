@@ -32,6 +32,36 @@
         </div>
 
         <div class="container" style="margin-top: 40px;">
+            <h2>A high level visualisation of the star systems.</h2>
+            <p>Use the checkboxes below to filter by discovery method or by number of planets in each star system.
+                Once one planet in the system is drawn, all other planets of the system are included.
+                The x-axis uses a log-scale and on the y-axis you can find the name of each system. 
+            </p>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <strong>Discovery Method</strong>
+                    <label class="method-transit"><input type="checkbox" name="method" value="Transit" checked> Transit</label>
+                    <label class="method-radial"><input type="checkbox" name="method" value="Radial Velocity" checked> Radial Velocity</label>
+                    <label class="method-microlensing"><input type="checkbox" name="method" value="Microlensing" checked> Microlensing</label>
+                    <label class="method-imaging"><input type="checkbox" name="method" value="Imaging" checked> Imaging</label>
+                    <label class="method-other"><input type="checkbox" name="method" value="Other" checked> Other</label>
+                </div>
+                <div class="filter-group">
+                    <strong>Number of Planets</strong>
+                    <div id="planet-count-filters"></div>
+                </div>
+            </div>
+
+            <div id="system-visualisation-container">
+                <div id="scroll-area" style="height: 400px; overflow-y: auto;">
+                    <svg id="systems-svg"></svg>
+                </div>
+                <svg id="x-axis-svg" height="40"></svg>
+            </div>
+        </div>
+
+        <div class="container" style="margin-top: 40px;">
             <h2>Mass vs. Orbital Distance</h2>
             <p>This plot reveals detection biases. Notice how different methods cluster in specific regions. Both axes use a logarithmic scale due to the extreme ranges.</p>
             
@@ -47,7 +77,7 @@
 
         <div class="container" style="margin-top: 40px;">
             <h2>Probability density function of the log orbital periods</h2>
-            <p>The labels of the x axes are in days (and not log days) for easier interpretation.</p>
+            <p>The labels of the x-axis are in days (and not log days) for easier interpretation.</p>
             
             <div id="density-plot-container"></div>
         </div>
@@ -60,8 +90,10 @@
 
     <script src="js/main.js"></script>
     <script src="js/detected_per_method_years.js"></script>
+    <script src="js/system_visualisation.js"></script>
     <script src="js/mass_vs_distance.js"></script>
     <script src="js/observatory_map.js"></script>
     <script src="js/orbital_density.js"></script>
+
 </body>
 </html>

@@ -128,7 +128,6 @@ async function buildDensityPlot() {
         .style("font-weight", "500")
         .text("Density");
     
-    
     svg.selectAll(".density")
         .on("mouseover", function() {
             d3.selectAll(".density").attr("opacity", 0.1);

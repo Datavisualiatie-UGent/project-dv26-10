@@ -199,3 +199,43 @@ p {
     fill: var(--text-muted);
     pointer-events: none;
 }
+
+/* --- FILTER CONTROLS --- */
+.filters {
+    max-width: 900px;
+    margin: 0 auto 20px auto;
+    background-color: var(--container-bg);
+    padding: 20px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    gap: 40px;
+}
+
+.filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+}
+
+.filter-group strong {
+    width: 100%;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.filter-group label {
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.method-transit     { color: var(--color-transit); }
+.method-radial      { color: var(--color-radial); }
+.method-microlensing { color: var(--color-microlensing); }
+.method-imaging     { color: var(--color-imaging); }
+.method-other       { color: var(--color-other); }
