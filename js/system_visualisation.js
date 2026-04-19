@@ -206,11 +206,13 @@ function drawVisualisation(systems, planets){
     svg.append("g")
         .call(yAxis);
 
+    const newFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
+
     const xTicks = [0.01, 0.1, 1, 10, 100, 1000, 10000];
     axisGroup.call(
         d3.axisBottom(xScale)
             .tickValues(xTicks)
-            .tickFormat(d => d >= 1 ? d3.format(".0f")(d) : d)
+            .tickFormat(newFormat)
     );
 
     axisSvg.append("text")
