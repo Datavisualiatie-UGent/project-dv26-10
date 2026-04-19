@@ -100,15 +100,29 @@ async function buildScatterPlot() {
 
     // Scatter plot
     svg.append('g')
-        .selectAll("circle")
+        .selectAll(".data-dot")
         .data(data)
         .join("circle")
+        .attr("class", "data-dot")
         .attr("cx", d => x(d.distance))
         .attr("cy", d => y(d.mass))
         .attr("r", 3.5)
         .style("fill", d => colorScale(d.method))
         .style("opacity", 0.6)
-        .style("stroke", "none");
+        .style("stroke", "none")
+        .on("mouseover", function(event, d) {
+            const currentMethod = ["Transit", "Radial Velocity", "Microlensing", "Imaging"].includes(d.method) ? d.method : "Other";
+            
+            svg.selectAll(".data-dot").style("opacity", 0.05);
+            
+            svg.selectAll(".data-dot").filter(e => {
+                const eMethod = ["Transit", "Radial Velocity", "Microlensing", "Imaging"].includes(e.method) ? e.method : "Other";
+                return eMethod === currentMethod;
+            }).style("opacity", 1);
+        })
+        .on("mouseout", function() {
+            svg.selectAll(".data-dot").style("opacity", 0.6);
+        });
 
     const referencePlanets = [
         { name: "Earth (1 AU, 1 M🜨)", mass: 1, distance: 1, dx: 30, dy: 30 },
@@ -164,17 +178,29 @@ async function buildScatterPlot() {
         .attr("opacity", 0.9)
         .attr("rx", 5);
 
-    legend.selectAll("legendDots")
+    const legendGroups = legend.selectAll(".legend-item")
         .data(legendCategories)
-        .join("circle")
+        .join("g")
+        .attr("class", "legend-item")
+        .style("cursor", "pointer")
+        .on("mouseover", function(event, d) {
+            svg.selectAll(".data-dot").style("opacity", 0.05);
+            svg.selectAll(".data-dot").filter(e => {
+                const eMethod = ["Transit", "Radial Velocity", "Microlensing", "Imaging"].includes(e.method) ? e.method : "Other";
+                return eMethod === d;
+            }).style("opacity", 1);
+        })
+        .on("mouseout", function() {
+            svg.selectAll(".data-dot").style("opacity", 0.6);
+        });
+
+    legendGroups.append("circle")
         .attr("cx", 0)
         .attr("cy", (d, i) => i * 25)
         .attr("r", 6)
         .style("fill", d => colorScale(d));
 
-    legend.selectAll("legendLabels")
-        .data(legendCategories)
-        .join("text")
+    legendGroups.append("text")
         .attr("x", 15)
         .attr("y", (d, i) => i * 25)
         .style("font-size", "13px")
