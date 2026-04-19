@@ -103,6 +103,23 @@ p {
 .bar-clickable:hover {
     filter: brightness(0.85);
 }
+#bar-chart-container {
+    position: relative;
+    margin-top: 0;
+}
+
+#back-btn {
+    position: absolute;
+    right: 40px; 
+    bottom: 65px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+#timeline-container svg, 
+#bar-chart-container svg {
+    display: block;
+}
 
 /* --- SCATTER PLOT & TOOLTIP STYLES --- */
 .scatter-dot {

@@ -7,6 +7,14 @@ async function buildInteractiveChart() {
     const rawData = await getExoplanetData();
     if (!rawData || rawData.length === 0) return;
 
+    const colorScale = (method) => {
+        if (method === "Transit") return "var(--color-transit, #2563eb)";
+        if (method === "Radial Velocity") return "var(--color-radial, #ea580c)";
+        if (method === "Microlensing") return "var(--color-microlensing, #16a34a)";
+        if (method === "Imaging") return "var(--color-imaging, #9333ea)";
+        return "var(--color-other, #64748b)";
+    };
+
     // Parse years to numbers and filter out invalid or missing entries
     const data = rawData
         .filter(d => d.disc_year && !isNaN(d.disc_year))
@@ -30,12 +38,12 @@ async function buildInteractiveChart() {
     const containerWidth = document.getElementById("bar-chart-container").clientWidth;
     
     // Timeline margins
-    const tMargin = { top: 10, right: 40, bottom: 20, left: 200 }; 
+    const tMargin = { top: 10, right: 40, bottom: 25, left: 185 }; 
     const tWidth = containerWidth - tMargin.left - tMargin.right;
     const tHeight = 80 - tMargin.top - tMargin.bottom;
 
     // Main chart margins
-    const cMargin = { top: 20, right: 40, bottom: 40, left: 200 }; 
+    const cMargin = { top: 5, right: 40, bottom: 40, left: 185 }; 
     const cWidth = containerWidth - cMargin.left - cMargin.right;
     const cHeight = 450 - cMargin.top - cMargin.bottom;
 
@@ -46,6 +54,34 @@ async function buildInteractiveChart() {
         .attr("height", tHeight + tMargin.top + tMargin.bottom)
         .append("g")
         .attr("transform", `translate(${tMargin.left},${tMargin.top})`);
+
+    const yLabel = timelineSvg.append("text")
+        .attr("x", -100)
+        .attr("y", tHeight / 2)
+        .attr("text-anchor", "middle")
+        .style("fill", "var(--text-main, #374151)")
+        .style("font-size", "11px")
+        .style("font-weight", "600");
+
+    yLabel.append("tspan")
+        .attr("x", -100)
+        .attr("dy", "-1em")
+        .text("Total number");
+    yLabel.append("tspan")
+        .attr("x", -100)
+        .attr("dy", "1.2em")
+        .text("of confirmed");
+    yLabel.append("tspan")
+        .attr("x", -100)
+        .attr("dy", "1.2em")
+        .text("planets");
+
+    const dynamicCount = yLabel.append("tspan")
+        .attr("x", -100)
+        .attr("dy", "1.5em")
+        .style("fill", "var(--accent-blue, #2563eb)")
+        .style("font-size", "14px")
+        .style("font-weight", "bold");
 
     // Aggregate data for the cumulative area chart
     const yearCounts = d3.rollup(data, v => v.length, d => d.disc_year);
@@ -94,6 +130,8 @@ async function buildInteractiveChart() {
      * based on the current filter state and timeline window.
      */
     function updateBarChart() {
+        dynamicCount.text(currentFilteredData.length.toLocaleString());
+
         const counts = d3.rollup(currentFilteredData, v => v.length, d => d.discoverymethod);
         let displayData = [];
 
@@ -166,7 +204,7 @@ async function buildInteractiveChart() {
         .attr("y", d => yBar(d.method))
         .attr("height", yBar.bandwidth())
         .attr("width", d => xBar(d.count))
-        .attr("fill", d => d.method === "Other" ? "#4b5563" : "var(--accent-blue, #2563eb)");
+        .attr("fill", d => colorScale(d.method));
 
         // Label data join
         const labels = chartSvg.selectAll(".bar-label").data(displayData, d => d.method);
