@@ -55,8 +55,9 @@ p {
 }
 
 .axis-label {
-    font-size: 12px;
-    fill: var(--text-muted);
+    font-size: 14px;
+    fill: var(--text-main);
+    font-weight: 500;
 }
 
 .domain, .tick line {
@@ -256,3 +257,41 @@ p {
 .method-microlensing { color: var(--color-microlensing); }
 .method-imaging     { color: var(--color-imaging); }
 .method-other       { color: var(--color-other); }
+
+/* --- SEGMENTED CONTROL (measurement selector) --- */
+.segmented-control {
+    display: inline-flex;
+    background: var(--grid-line);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.segmented-control button {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.segmented-control button.active {
+    background: var(--container-bg);
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-weight: 600;
+}
+
+.segmented-control button:hover {
+    background: rgba(255,255,255,0.6);
+}
+
+.plot-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

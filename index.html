@@ -89,6 +89,35 @@
             <div id="density-plot-container"></div>
         </div>
 
+        <div class="container" style="margin-top: 40px;">
+            <h2>Exoplanets in the sky</h2>
+            <p>
+                Explore the sky and discover where exoplanets are located across the celestial sphere.
+                Zoom in with the mouse wheel, then click and drag to navigate.
+                Hover over any point to reveal detailed information.
+            </p>
+
+            <div id="sky-map-container"></div>
+        </div>
+
+        <div class="container" style="margin-top: 40px;">
+            <h2>Measurement precision across discovery methods</h2>
+            <p>
+                This plot compares measurement precision across discovery methods.
+                Higher values indicate more precise measurements.
+                Switch between quantities to compare precision.
+            </p>
+
+            <div class="plot-controls">
+                <div class="segmented-control" id="precision-toggle">
+                    <button data-metric="orbper" class="active">Orbital Period</button>
+                    <button data-metric="orbsmax">Orbital Distance</button>
+                    <button data-metric="bmasse">Planet Mass</button>
+                </div>
+            </div>
+            <div id="precision-plot-container"></div>
+        </div>
+
     </main>
 
     <footer>
@@ -102,6 +131,8 @@
     <script src="js/observatory_map.js"></script>
     <script src="js/orbital_density.js"></script>
     <script src="js/average_system_comparison.js"></script>
+    <script src="js/sky_map.js"></script>
+    <script src="js/measurement_precision.js"></script>
 
 </body>
 </html>
