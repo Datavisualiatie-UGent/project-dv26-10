@@ -193,7 +193,7 @@ async function buildAverageSystemComparison() {
                     .style("stroke-width", 1.5)
                     .style("cursor", "pointer")
                     .on("mouseover", function(event, d) {
-                        d3.select(this).style("stroke", "white").style("stroke-width", 2).raise();
+                        d3.select(this).style("stroke", "white").style("stroke-width", 2);
                         
                         tooltip.style("transition", "none").style("opacity", 1).html(`
                             <div class="tt-header">${d.name}</div>
