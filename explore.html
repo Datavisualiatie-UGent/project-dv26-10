@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exoplanets | Explore the dataset</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/explore.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="nav-logo" href="index.html">Exo<span>planets</span>.</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="explore.html" class="active">Explore dataset</a></li>
+                <li><a href="story.html">Are we unique?</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="atmosphere-bg" style="padding: 5rem 2rem 8rem 2rem; margin-bottom: -4rem;">
+        <div class="stars"></div>
+        <div class="hero-content">
+            <h1>Explore the dataset</h1>
+            <p class="subtitle">What we know about distant worlds</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Exoplanet lab -->
+        <section class="main-container overlap-container">
+            <div class="exolab-layout">
+                
+                <!-- The ID -->
+                <div class="exolab-display">
+                    <div class="name-search-container">
+                        <input type="text" id="planet-search" class="planet-search-input" placeholder="Search by planet name (e.g. Kepler-22 b)...">
+                    </div>
+                    <div id="exolab-carousel" class="card-carousel">
+                        <div class="empty-state-centered">
+                            <p>Adjust the parameters and press <q>Find my planet</q><br>to search the archive.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Carousel controls -->
+                    <div id="carousel-controls" class="carousel-nav" style="visibility: hidden;">
+                        <button class="nav-btn" onclick="cycleCard(-1)">&larr;</button>
+                        <div class="match-info">
+                            <span id="match-counter">1 / 1</span>
+                            <small id="match-label">Best match</small>
+                        </div>
+                        <button class="nav-btn" onclick="cycleCard(1)">&rarr;</button>
+                    </div>
+                </div>
+
+                <!-- The filters -->
+                <div class="exolab-controls">
+                    <h2>Exoplanet lab</h2>
+                    <p class="section-desc">Define your criteria to find matching worlds.</p>
+                    
+                    <div class="parameter-group">
+                        <div class="param-header">
+                            <label>Mass (Earth masses, M<sub>⊕</sub>)</label>
+                            <span class="range-display" id="display-mass">...</span>
+                        </div>
+                        <div class="dual-slider">
+                            <div class="slider-track"></div>
+                            <div class="slider-fill" id="fill-mass"></div>
+                            <input type="range" id="mass-min" step="0.1">
+                            <input type="range" id="mass-max" step="0.1">
+                        </div>
+                        <div class="param-footer">
+                            <label class="strict-toggle">
+                                <input type="checkbox" id="mass-allow-unknown" checked>
+                                <span class="toggle-box"></span>
+                                Include planets with unknown mass
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="parameter-group">
+                        <div class="param-header">
+                            <label>Radius (Earth radii, R<sub>⊕</sub>)</label>
+                            <span class="range-display" id="display-rad">...</span>
+                        </div>
+                        <div class="dual-slider">
+                            <div class="slider-track"></div>
+                            <div class="slider-fill" id="fill-rad"></div>
+                            <input type="range" id="rad-min" step="0.1">
+                            <input type="range" id="rad-max" step="0.1">
+                        </div>
+                        <div class="param-footer">
+                            <label class="strict-toggle">
+                                <input type="checkbox" id="rad-allow-unknown" checked>
+                                <span class="toggle-box"></span>
+                                Include planets with unknown radius
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="parameter-group">
+                        <div class="param-header">
+                            <label>Distance from Star (AU)</label>
+                            <span class="range-display" id="display-dist">...</span>
+                        </div>
+                        <div class="dual-slider">
+                            <div class="slider-track"></div>
+                            <div class="slider-fill" id="fill-dist"></div>
+                            <input type="range" id="dist-min" step="0.01">
+                            <input type="range" id="dist-max" step="0.01">
+                        </div>
+                        <div class="param-footer">
+                            <label class="strict-toggle">
+                                <input type="checkbox" id="dist-allow-unknown" checked>
+                                <span class="toggle-box"></span>
+                                Include planets with unknown distance
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="parameter-group">
+                        <label style="font-family: var(--font-heading); font-size: 0.85rem; text-transform: uppercase; color: var(--text-dark); font-weight: 700; margin-bottom: 0.5rem; display: block;">Discovery method</label>
+                        <div class="method-toggles">
+                            <button class="method-btn transit active" data-method="Transit">Transit</button>
+                            <button class="method-btn radial active" data-method="Radial Velocity">Radial velocity</button>
+                            <button class="method-btn microlensing active" data-method="Microlensing">Microlensing</button>
+                            <button class="method-btn imaging active" data-method="Imaging">Imaging</button>
+                            <button class="method-btn other active" data-method="Other">Other</button>
+                        </div>
+                    </div>
+
+                    <button id="search-btn" class="lab-btn">Find my planet</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dataset summary -->
+        <section style="margin-top: 2rem; position: relative;" id="dataset-summary-section">
+            <div class="explorable-text" style="margin-bottom: 2rem;">
+                <h2 style="margin-bottom: 1.5rem;">The archive at a glance</h2>
+                <p>
+                    Before diving into specific discovery methods and planetary systems, let's look at the dataset as a whole. The NASA Exoplanet Archive contains a vast array of parameters for each confirmed world. 
+                </p>
+                <p>
+                    A selection of the most interesting parameters is shown below. Hover over any of these boxes to learn exactly what it measures. The values shown are the medians across all confirmed planets, alongside the recorded minimum and maximum range. 
+                </p>
+                <p>
+                    Want to see how a specific world stacks up against the rest of the universe? Head back up to the "Exoplanet lab", find a world, and then <button class="inline-action summary-action" data-mode="compare">compare it</button> with the archive's medians.
+                </p>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
+                <div class="global-toggle-container" id="summary-mode-toggle">
+                    <button class="global-toggle-btn active" data-mode="medians">Archive medians</button>
+                    <button class="global-toggle-btn" data-mode="compare">Compare planet</button>
+                </div>
+            </div>
+
+            <div class="square-grid" id="summary-square-grid"></div>
+
+        </section>
+
+        <!-- Discovery methods -->
+        <section style="margin-top: 2rem; position: relative;">
+            
+            <div class="explorable-text">
+                <h2 style="margin-bottom: 1.5rem;">The hunt for new worlds</h2>
+                <p>
+                    Since the first confirmed discovery in 1992, astronomers rely on many exoplanet-hunting techniques. 
+                    In <button class="inline-action" data-start="1992" data-end="2009">the early days</button>, they primarly used radial velocity: watching for the subtle wobble of a star pulled by unseen gravity. 
+                    This changed in 2009 with the dawn of the <button class="inline-action" data-start="2009" data-end="2018">Kepler Space Telescope Era</button>, which popularised the transit method by staring at thousands of stars and seeking a dip in brightness. 
+                    <button class="inline-action" data-start="2022" data-end="2026">Today</button>, using many more observatories, both ground-based as well as in space, we are finding strange worlds with a variety of techniques.
+                </p>
+                <p>
+                    Drag the handles on the timeline below, or click the highlighted eras above, to explore <button class="inline-action" data-start="1992" data-end="2026">the entire history</button> of exoplanet discovery. Click the "Other" bar to zoom in on the rarest techniques!
+                </p>
+            </div>
+            
+            <div id="timeline-container" style="margin-bottom: 1rem; width: 100%;"></div>
+            
+            <div id="bar-chart-container" style="position: relative; width: 100%;">
+                <button id="back-btn" class="lab-btn" style="display: none; position: absolute; right: 20px; bottom: 50px; z-index: 10; width: auto; padding: 0.5rem 1.2rem; font-size: 0.9rem; margin: 0;">
+                    &larr; Back to main methods
+                </button>
+            </div>
+            
+            <!-- Observatories -->
+            <div class="explorable-text" style="margin-top: 2rem;">
+                <p>
+                    But <em>where</em> is this data coming from? Early discoveries relied entirely on ground-based telescopes located on remote, high-altitude mountaintops. Hover over the map below to see how famous peaks like <button class="inline-action map-action" data-highlight="Mauna Kea">Mauna Kea</button> in Hawaii or <button class="inline-action map-action" data-highlight="Paranal">Paranal</button> in Chile act as massive hubs for multiple observatories.
+                </p>
+                <p>
+                    However, the modern era is heavily driven by space-based missions orbiting far above Earth's atmospheric distortion, like <button class="inline-action map-action" data-highlight="Kepler">Kepler</button> and <button class="inline-action map-action" data-highlight="TESS">TESS</button>. These telescopes are custom-built for the purpose of searching exoplanets using the transit method. 
+                </p>
+                
+                <p style="font-size: 0.95rem; font-weight: 600; color: var(--text-dark); margin-bottom: 0.75rem;">
+                    Select a method below to illuminate the facilities that use it:
+                </p>
+
+                <div class="method-toggles" style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <button class="method-btn map-action transit" data-highlight-type="Transit">Transit</button>
+                    <button class="method-btn map-action radial" data-highlight-type="Radial Velocity">Radial velocity</button>
+                    <button class="method-btn map-action microlensing" data-highlight-type="Microlensing">Microlensing</button>
+                    <button class="method-btn map-action imaging" data-highlight-type="Imaging">Imaging</button>
+                    
+                    <button class="inline-action map-action" data-reset="true" style="margin-left: auto; border-bottom: none; font-size: 0.85rem; color: var(--text-muted);">⟲ Reset map highlights</button>
+                </div>
+            </div>
+
+            <div id="observatory-map-container" style="width: 100%; position: relative;"></div>
+
+        </section>
+
+        <!-- Sky map -->
+        <section class="container" style="margin-top: 2rem; margin-bottom: 2rem;">
+            
+            <div class="explorable-text">
+                <p>
+                    With so many advanced observatories on Earth and in space, you might assume we have mapped the entire cosmos. The map below projects every confirmed exoplanet onto the celestial sphere using Right Ascension (horizontal) and Declination (vertical). You can click and drag to pan, or scroll to zoom.
+                </p>
+                <p>
+                    While discoveries appear scattered across the map, one feature stands out immediately: the massive, incredibly dense cluster on the top-right. That is the <button class="inline-action sky-action" data-target="kepler">Kepler Field of View</button>. The Kepler Space Telescope didn't scan the whole night sky; it stared continuously at one single patch of the Milky Way for four years. Also on the right, but below the celestial equator, you'll spot a concentrated patch of green microlensing discoveries. Because a microlensing alignment is rare, astronomers have to look at hundreds of millions of stars simultaneously to catch it happening. The <button class="inline-action sky-action" data-target="bulge">galactic bulge</button> is the only place in the sky with enough background stars tightly packed together to make this method reliably successful.
+                </p>
+                <p>
+                    The sheer volume of planets found in these small windows is profound. It tells us that our current map is not a complete picture, but a tiny sample. It suggests that billions of worlds remain hidden in the vast, unobserved dark gaps of this map, just waiting to be found.
+                </p>
+                <p style="text-align: right; margin-top: -1rem; margin-bottom: -1rem;">
+                    <button class="inline-action sky-action" data-target="reset" style="border-bottom: none; font-size: 0.85rem; color: var(--text-muted);">⟲ Reset map view</button>
+                </p>
+            </div>
+
+            <div id="sky-map-container" style="width: 100%; position: relative; background: var(--space-top); border: 1px solid var(--border-light); border-radius: 12px; box-shadow: var(--shadow-card); overflow: hidden;"></div>
+
+        </section>
+
+        <!-- Planetary systems -->
+        <section class="container" style="margin-top: -1rem;">
+            
+            <div class="explorable-text">
+                <h2 style="margin-bottom: 1.5rem;">Planetary systems visualised</h2>
+                <p>
+                    We have mapped where these worlds are in the night sky, but what do their actual planetary systems look like? Our own system has eight planets arranged in wide, near-circular orbits, with four rocky planets in the inner solar system nicely separated from four gas giants further away.
+                </p>
+                <div id="solar-system-baseline" style="margin: 1.5rem 0; padding: 2rem 1rem 1rem 1rem;">
+                    <svg id="baseline-svg" style="width: 100%; height: 130px;"></svg>
+                </div>
+                <p>
+                    The visualisation below maps out (exo)planetary systems. The horizontal axis represents the distance from the host star in astronomical units (AU), plotted on a logarithmic scale to be able to show all planets on one page. The size of each circle reflects the physical radius of the planet.
+                </p>
+            </div>
+
+            <div class="overlap-container" style="padding: 2.5rem 2rem;">
+                
+                <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-light); padding-bottom: 2rem;">
+                    
+                    <div>
+                        <span style="display: block; font-family: var(--font-heading); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">Filter by discovery method</span>
+                        <div class="method-toggles" id="sys-method-filters">
+                            <button class="method-btn transit active" data-method="Transit">Transit</button>
+                            <button class="method-btn radial active" data-method="Radial Velocity">Radial velocity</button>
+                            <button class="method-btn microlensing active" data-method="Microlensing">Microlensing</button>
+                            <button class="method-btn imaging active" data-method="Imaging">Imaging</button>
+                            <button class="method-btn other active" data-method="Other">Other</button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <span style="display: block; font-family: var(--font-heading); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">Filter by planet count</span>
+                        <div class="method-toggles" id="sys-count-filters"></div>
+                    </div>
+
+                </div>
+
+                <div id="system-visualisation-container">
+                    <div id="scroll-area" style="height: 450px; overflow-y: auto; overflow-x: hidden; border-bottom: 1px solid var(--border-light); background: transparent;">
+                        <svg id="systems-svg"></svg>
+                    </div>
+                    <svg id="x-axis-svg" style="height: 50px; margin-top: 8px;"></svg>
+                </div>
+            </div>
+        </section>
+
+        <section class="container" style="margin-bottom: -4rem;">
+            <div class="explorable-text" style="text-align: center; max-width: 800px; margin: 0 auto;">
+                <p style="font-size: 1.25rem; color: var(--text-dark); font-weight: 500;">
+                    Perhaps you are wondering at this point: is our own carefully ordered Solar System a common occurrence, or a cosmic anomaly? 
+                </p>
+                <p style="margin-top: 2rem;">
+                    <a href="story.html" class="lab-btn" style="display: inline-block; width: auto; padding: 1rem 2.5rem; text-decoration: none;">Find out if we are unique &rarr;</a>
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p><strong>Exoplanets.</strong></p>
+            <p>Authors: Maxime Deryck, Robin Mattheeuws &amp; Niels Struye</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/exolab.js"></script>
+    <script src="js/dataset_summary.js"></script>
+    <script src="js/detected_per_method_years.js"></script>
+    <script src="js/observatory_map.js"></script>
+    <script src="js/sky_map.js"></script>
+    <script src="js/system_visualisation.js"></script>
+</body>
+</html>

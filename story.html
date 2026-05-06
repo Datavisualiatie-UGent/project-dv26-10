@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exoplanets | Are we unique?</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/story.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- KaTeX CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                ],
+                throwOnError : false
+            });
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="nav-logo" href="index.html">Exo<span>planets</span>.</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="explore.html">Explore dataset</a></li>
+                <li><a href="story.html" class="active">Are we unique?</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="atmosphere-bg">
+        <div class="stars"></div>
+        <div class="hero-content">
+            <h1>Are we unique?</h1>
+            <p class="subtitle">The invisible lens of detection bias</p>
+            <p class="intro-text">
+                When we look at the thousands of confirmed exoplanets, a strange picture emerges. The universe seems to be lacking planetary systems like our own Solar System. But are we really so unique, or are we simply blind to systems like our own?
+            </p>
+        </div>
+    </header>
+
+    <main>
+        <!-- The anomaly -->
+        <section class="main-container overlap-container">
+            <div class="explorable-text">
+                <h2 style="margin-bottom: 1.5rem;">The <q>average</q> exoplanet system vs. ours</h2>
+                <p>
+                    Our own Solar System has eight planets arranged in wide, near-circular orbits, with four rocky planets in the inner solar system nicely separated from four gas giants further away.
+                </p>
+                <p>
+                    If we construct an <q>average</q> system by taking the median sizes and distances of all known systems, the contrast with our Solar System is staggering.
+                </p>
+                <div class="methodology-note">
+                    This <q>average</q> is constructed by taking the median of every first planet (closest to the star), then the median of every second planet (for all planetary systems with at least two planets), and so on until the maximum number of planets (slider) is reached.
+                </div>
+                
+                <div style="margin: 2rem 0; padding: 1.5rem; background: var(--bg-body); border: 1px solid var(--border-light); border-radius: 12px;">
+                    <label for="planet-slider" style="display: flex; justify-content: space-between; font-family: var(--font-heading); font-weight: 600; color: var(--text-dark); margin-bottom: 0.75rem;">
+                        <span>Number of planets in system</span>
+                        <span id="planet-slider-val" style="color: var(--accent-glow);">All systems</span>
+                    </label>
+
+                    <div style="position: relative; height: 30px; margin: 0.5rem 0;">
+                        
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); height: 6px; background: #e2e8f0; border-radius: 3px; pointer-events: none; z-index: 0;"></div>
+                        
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 3px; pointer-events: none; z-index: 1;">
+                            <div style="width: 12px; height: 12px; background: var(--accent-glow); border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                            <div style="width: 12px; height: 12px; background: #94a3b8; border-radius: 50%;"></div>
+                        </div>
+                        
+                        <input type="range" id="planet-slider" min="0" max="8" value="0" style="position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 30px; z-index: 2; margin: 0; padding: 0;">
+                    </div>
+                    <div id="dynamic-sys-count" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; text-align: right;"></div>
+                </div>
+            </div>
+            
+            <div id="average-system-container" style="margin: 3rem 0; margin-top: -2rem; width: 100%; position: relative;"></div>
+
+            <div class="explorable-text" style="margin-bottom: -2rem; margin-top: -1rem;">
+                <p>
+                    Notice how tightly packed the exoplanets are around their host star. <strong>Is our Solar System the norm, or the exception?</strong> If alien astronomers were looking at our Sun using our current technology, they likely wouldn't be able to detect Earth, Jupiter, or Saturn. They simply take too long to orbit, have not enough gravitational impact on our Sun (due to great distance and moderate mass) and are not large enough to block sufficient sunlight. 
+                </p>
+            </div>
+        </section>
+
+        <!-- Detection biases-->
+        <section class="container" style="margin-top: 2rem;">
+            <div class="explorable-text">
+                <h2 style="margin-bottom: 1.5rem;">Detection biases</h2>
+                <p>
+                    When we look at the exoplanet archive, we aren't seeing a perfect reflection of the universe. We are seeing exactly what our instruments are capable of finding. As the density plot below shows, the vast majority of planets we have found across all methods have orbital periods of just a few days. The longer a planet takes to orbit, the harder it becomes to verify its existence. 
+                </p>
+                <p>
+                    To confirm a planet via the <span class="inline-action density-action method-action" data-method="Transit">transit</span> method, astronomers usually need to see it pass in front of its star at least three times. For a planet orbiting at the distance of Earth, that takes three full years of continuous, uninterrupted observation!
+                </p>
+                <p>
+                    Conversely, the <span class="inline-action density-action method-action" data-method="Radial velocity">radial velocity</span> method doesn't strictly require multiple full orbits to detect a gravitational trend, allowing it to find planets slightly further out.
+                </p>
+                <div class="methodology-note" style="margin-top: 1rem;">
+                    The horizontal axis uses a logarithmic scale, meaning every major tick mark represents a tenfold increase in time.
+                </div>
+            </div>
+            
+            <div id="density-plot-container" style="position: relative; margin-top: 2rem;"></div>
+        </section>
+
+        <section class="container">
+            <div class="explorable-text">
+                <p>
+                    To further understand why our view of the universe is so skewed, we have to look at how different techniques "see" planets. Plotting planetary mass against orbital distance reveals the smoking gun of detection bias: our instruments cluster in very specific regions.
+                </p>
+                <p>
+                    The <span class="inline-action scatter-action method-action" data-method="Transit">transit</span> method completely dominates the left part. The closer (and larger) a planet is, the more sunlight it blocks and the more frequently it crosses its star. 
+                    Similarly, <span class="inline-action scatter-action method-action" data-method="Radial velocity">radial velocity</span> excels for either very close planets or very massive planets, as those exert the most gravitational "wobble" on their host stars.
+                </p>
+                <p>
+                    Meanwhile, <span class="inline-action scatter-action method-action" data-method="Imaging">direct imaging</span> is restricted almost entirely to the top right. It can only take pictures of extremely massive (often glowing hot) planets that orbit far enough away to avoid being washed out by their host star's blinding glare.
+                </p>
+            </div>
+            
+            <div id="scatter-plot-container" style="position: relative; margin-top: 2rem;"></div>
+        </section>
+
+        <!-- Measurements -->
+        <section class="container">
+            <div class="explorable-text">
+                <h2 style="margin-bottom: 1.5rem;">Measurement precision across methods</h2>
+                <p>
+                    Beyond detection biases, we must also consider the physical limits of the instruments. Even when planetary scientists do manage to find a planet, the certainty of our measurements varies wildly depending on the technique used. 
+                </p>
+                <p>
+                    The boxplots below map the measurement precision (where higher means a much smaller margin of error). Because time is relatively easy to measure, the <span class="inline-action metric-action" data-metric="orbper">orbital period</span> is known with high accuracy across almost all methods. An exception being <span class="inline-action highlight-action method-action" data-method="Microlensing">microlensing</span>, just as in other measurements, because these events typically only happen once per exoplanet, giving astronomers a single chance to gather data, which naturally leads to much higher uncertainty.
+                </p>
+                <p>
+                    However, our certainty drops significantly when estimating <span class="inline-action metric-action" data-metric="orbsmax">orbital distance</span> or <span class="inline-action metric-action" data-metric="bmasse">planet mass</span>. Look at the values on the vertical axis in particular.
+                </p>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-top: 2rem;">
+                <div class="global-toggle-container" id="precision-toggle">
+                    <button class="global-toggle-btn active" data-metric="orbper">Orbital period</button>
+                    <button class="global-toggle-btn" data-metric="orbsmax">Orbital distance</button>
+                    <button class="global-toggle-btn" data-metric="bmasse">Planet mass</button>
+                </div>
+            </div>
+            
+            <div id="precision-plot-container" style="position: relative; margin-top: 1rem;"></div>
+
+            <div class="methodology-note" style="margin-top: 1rem;">
+                <strong>Understanding the boxplot</strong><br>
+                Precision is calculated as the inverse of relative error. <strong>A higher value means the measurement is more certain.</strong> The solid box represents the middle 50% of the data (from the 25th to the 75th percentile), with the thick white line marking the median. The vertical lines extend to the 5th and 95th percentiles to show the full typical range while ignoring extreme outliers.
+            </div>
+        </section>
+
+        <!-- The habitable zone -->
+        <section class="container">
+            <div class="explorable-text">
+                <h2 style="margin-bottom: 1.5rem;">Finding a second Earth</h2>
+                <p>
+                    If we seek to answer whether we are unique, we must also look at where planets sit relative to their star's <strong>habitable zone</strong>, the so-called "Goldilocks" region where it is neither too hot nor too cold for liquid water to exist. 
+                </p>
+                <p>
+                    When we plot stellar temperature against orbital distance, a striking pattern emerges. Most of the discovered exoplanets are <span class="inline-action hz-action" data-type="hot">scorching hot worlds</span> orbiting too close to their host star for liquid water to exist. 
+                </p>
+                <p>
+                    The green band below represents the habitable zone. Notice how few of the discovered exoplanets actually fall within it. To this day, there are not many <span class="inline-action hz-action" data-type="hz">habitable candidates</span> found. An Earth-twin around a Sun-like star remains one of the greatest challenges in modern astronomy.
+                </p>
+            </div>
+            
+            <div id="hz-plot-container" style="margin-top: -3rem; position: relative;"></div>
+
+            <div class="methodology-note" style="margin-top: 1rem;">
+                <strong>Approximating the habitable zone</strong><br>
+                The habitable zone boundaries are estimated using a simplified physical model (of which many variations exist). In this visualisation, the distance $d$ required to maintain liquid water is approximated to scale with the square of the star's effective temperature $T_{\text{eff}}$ relative to our Sun ($5778$ K).
+                
+                <p style="margin-top: 1rem; font-family: var(--font-body);">
+                    The specific boundaries used in this plot are:
+                    <br>
+                    $$d_{\text{inner}} = 0.7 \cdot \left( \frac{T_{\text{eff}}}{5778} \right)^2 \quad \text{and} \quad d_{\text{outer}} = 1.24 \cdot \left( \frac{T_{\text{eff}}}{5778} \right)^2.$$
+                </p>
+
+                <br>
+                This calculation assumes a Sun-like star and Earth-like atmosphere and does not account for specific planetary greenhouse effects, albedo variations, or atmospheric pressure.
+            </div>
+        </section>
+
+        <!-- Chapter 6: Conclusion -->
+        <section class="container">
+            <div class="explorable-text" style="text-align: center; max-width: 800px; margin: 0 auto; padding-top: 4rem; border-top: 1px solid var(--border-light);">
+                <h2 style="margin-bottom: 1.5rem; font-size: 2.5rem;">So, are we unique?</h2>
+                <p style="font-size: 1.25rem; color: var(--text-dark); font-weight: 500;">
+                    The truth is, we don't know yet. 
+                </p>
+                <p>
+                    Our current exoplanet archive is not representative for the entire galaxy, we think. It is a map of what our current technology allows us to see. We have found thousands of tightly packed, scorching hot super-Earths and giant planets because they are the "loudest" and easiest to detect. 
+                </p>
+                <p>
+                    A quiet system like our own, with small rocky planets taking months or even years to orbit, is simply too subtle for our current telescopes to catch. We aren't necessarily an anomaly; we are just incredibly difficult to spot.
+                </p>
+                <div style="margin-top: 3rem;">
+                    <a href="explore.html" class="lab-btn" style="display: inline-block; width: auto; padding: 1rem 2.5rem; text-decoration: none; font-size: 1rem;">
+                        &larr; Return to the archive
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p><strong>Exoplanets.</strong></p>
+            <p>Authors: Maxime Deryck, Robin Mattheeuws &amp; Niels Struye</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/average_system_comparison.js"></script>
+    <script src="js/mass_vs_distance.js"></script>
+    <script src="js/orbital_density.js"></script>
+    <script src="js/measurement_precision.js"></script>
+    <script src="js/hz_plot.js"></script>
+</body>
+</html>

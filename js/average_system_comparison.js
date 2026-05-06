@@ -1,84 +1,60 @@
-/**
- * Builds a visualization comparing a statistically "average" exoplanetary system
- * against our own Solar System. Uses a logarithmic scale for distance and 
- * a square root scale for planet radius.
- */
 async function buildAverageSystemComparison() {
-    const rawData = await getExoplanetData();
+    const rawData = window.globalExoplanetData;
     if (!rawData || rawData.length === 0) return;
 
+    // Clean data
     const validData = rawData
         .filter(d => d.pl_orbsmax && d.pl_rade && !isNaN(d.pl_orbsmax) && !isNaN(d.pl_rade) && +d.pl_orbsmax > 0)
         .map(d => ({
             hostname: d.hostname,
             dist: +d.pl_orbsmax,
-            rad: +d.pl_rade
+            rad: +d.pl_rade // Earth radii
         }));
 
     const systems = Array.from(d3.group(validData, d => d.hostname).values())
         .map(planets => planets.sort((a, b) => a.dist - b.dist));
 
-    const solarSystem = [
-        { name: "Mercury", dist: 0.39, rad: 0.38, type: "Solar" },
-        { name: "Venus", dist: 0.72, rad: 0.95, type: "Solar" },
-        { name: "Earth", dist: 1.00, rad: 1.00, type: "Solar" },
-        { name: "Mars", dist: 1.52, rad: 0.53, type: "Solar" },
-        { name: "Jupiter", dist: 5.20, rad: 11.21, type: "Solar" },
-        { name: "Saturn", dist: 9.58, rad: 9.45, type: "Solar" },
-        { name: "Uranus", dist: 19.20, rad: 4.01, type: "Solar" },
-        { name: "Neptune", dist: 30.05, rad: 3.88, type: "Solar" }
-    ];
+    const formattedSolarSystem = solarSystem.map(p => ({
+        name: p.name,
+        dist: p.distance,
+        rad: p.radius * 11.209, // Convert to correct units
+        type: "Solar",
+        color: p.color
+    }));
 
+    /// Dimensions and lay-out
     const container = document.getElementById("average-system-container");
-    const containerWidth = container.clientWidth;
-
-    const margin = { top: 40, right: 60, bottom: 60, left: 160 };
-    const width = containerWidth - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
-
-    const controlsDiv = d3.select("#average-system-container").append("div")
-        .style("margin-bottom", "20px")
-        .style("display", "flex")
-        .style("flex-direction", "column")
-        .style("gap", "10px");
-
-    const selectWrapper = controlsDiv.append("div");
-    selectWrapper.append("strong").text("System Selection: ");
-    const select = selectWrapper.append("select").attr("id", "system-mode-select");
-
-    const options = ["Combined Method", ...Array.from({length: 8}, (_, i) => `${i + 1} Planet Systems`)];
-    select.selectAll("option").data(options).join("option").attr("value", d => d).text(d => d);
-
-    const descText = controlsDiv.append("p")
-        .style("font-size", "13px")
-        .style("color", "var(--text-muted, #64748b)")
-        .style("margin", "0")
-        .style("line-height", "1.5")
-        .style("background-color", "var(--bg-color, #f4f7f6)")
-        .style("padding", "10px")
-        .style("border-radius", "5px");
+    container.innerHTML = ""; // Clear existing
+    
+    const fullWidth = 800;
+    const fullHeight = 240;
+    const margin = { top: 20, right: 40, bottom: 50, left: 150 };
+    const width = fullWidth - margin.left - margin.right;
+    const height = fullHeight - margin.top - margin.bottom;
 
     const svg = d3.select("#average-system-container")
         .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("viewBox", `0 0 ${fullWidth} ${fullHeight}`)
+        .style("width", "100%")
+        .style("height", "auto")
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    let tooltip = d3.select("body").select(".d3-tooltip");
+    let tooltip = d3.select("body").select(".exo-tooltip");
     if (tooltip.empty()) {
-        tooltip = d3.select("body").append("div").attr("class", "d3-tooltip");
+        tooltip = d3.select("body").append("div").attr("class", "exo-tooltip").style("pointer-events", "none");
     }
 
     const xDist = d3.scaleLog().domain([0.01, 40]).range([0, width]);
-    const rScale = d3.scaleSqrt().domain([0, 12]).range([2, 24]);
-    const yTrack = d3.scaleBand().domain(["avg", "solar"]).range([0, height]).padding(0.4);
+    const rScale = d3.scaleSqrt().domain([0, 12]).range([2, 22]);
+    const yTrack = d3.scaleBand().domain(["avg", "solar"]).range([0, height]).padding(0.5);
 
     const tracks = [
-        { id: "avg", line1: "Average Exoplanet", line2: "System" },
+        { id: "avg", line1: "Average exoplanet", line2: "system" },
         { id: "solar", line1: "Our Solar", line2: "System" }
     ];
 
+    // Orbit lines and host stars
     svg.selectAll(".track-line")
         .data(tracks)
         .join("line")
@@ -87,8 +63,8 @@ async function buildAverageSystemComparison() {
         .attr("x2", width)
         .attr("y1", d => yTrack(d.id) + yTrack.bandwidth() / 2)
         .attr("y2", d => yTrack(d.id) + yTrack.bandwidth() / 2)
-        .style("stroke", "var(--grid-line, #e0e0e0)")
-        .style("stroke-width", 2)
+        .style("stroke", "var(--border-light)")
+        .style("stroke-width", 1)
         .style("stroke-dasharray", "4 4");
 
     svg.selectAll(".star")
@@ -96,10 +72,11 @@ async function buildAverageSystemComparison() {
         .join("circle")
         .attr("cx", 0)
         .attr("cy", d => yTrack(d.id) + yTrack.bandwidth() / 2)
-        .attr("r", 15)
-        .style("fill", "#fbbf24")
-        .style("stroke", "#f59e0b")
-        .style("stroke-width", 2);
+        .attr("r", 12)
+        .style("fill", "#fcd34d")
+        .style("stroke", "#fbbf24")
+        .style("stroke-width", 2)
+        .style("filter", "drop-shadow(0 0 5px rgba(252, 211, 77, 0.8))");
 
     const labels = svg.selectAll(".track-label")
         .data(tracks)
@@ -108,9 +85,10 @@ async function buildAverageSystemComparison() {
         .attr("x", -25)
         .attr("y", d => yTrack(d.id) + yTrack.bandwidth() / 2)
         .attr("text-anchor", "end")
-        .style("font-weight", "bold")
-        .style("fill", "var(--text-main, #333)")
-        .style("font-size", "14px");
+        .style("font-family", "var(--font-heading)")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-dark)")
+        .style("font-size", "13px");
 
     labels.selectAll("tspan")
         .data(d => [d.line1, d.line2])
@@ -119,46 +97,53 @@ async function buildAverageSystemComparison() {
         .attr("dy", (d, i) => i === 0 ? "-0.2em" : "1.2em")
         .text(d => d);
 
-    const niceFormat = d => Number(d).toLocaleString(undefined, { maximumFractionDigits: 2 });
-    
-    svg.append("g")
+    // X-axis
+    const logFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
+    const gx = svg.append("g")
         .attr("transform", `translate(0, ${height})`)
-        .call(d3.axisBottom(xDist).tickValues([0.01, 0.1, 1, 10, 40]).tickFormat(niceFormat))
-        .selectAll("text")
-        .style("fill", "var(--text-main, #333)");
+        .call(d3.axisBottom(xDist).tickValues([0.01, 0.1, 1, 10, 40]).tickFormat(logFormat));
+        
+    gx.select(".domain").attr("stroke", "var(--border-light)");
+    gx.selectAll(".tick line").attr("stroke", "var(--border-light)");
+    gx.selectAll("text").style("font-family", "var(--font-body)").style("fill", "var(--text-muted)");
 
     svg.append("text")
         .attr("text-anchor", "middle")
         .attr("x", width / 2)
         .attr("y", height + 40)
-        .style("fill", "var(--text-main, #333)")
-        .style("font-size", "13px")
-        .style("font-weight", "500")
-        .text("Orbital Distance (AU)");
+        .style("font-family", "var(--font-heading)")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .style("text-transform", "uppercase")
+        .style("letter-spacing", "1px")
+        .style("fill", "var(--text-muted)")
+        .text("Orbital distance (AU)");
 
     const planetGroup = svg.append("g");
     
+    // Solar system labels
     svg.selectAll(".solar-text")
-        .data(solarSystem)
+        .data(formattedSolarSystem)
         .join("text")
         .attr("class", "solar-text")
         .attr("x", d => xDist(d.dist))
         .attr("y", (d, i) => {
             const trackY = yTrack("solar") + yTrack.bandwidth() / 2;
-            return i % 2 === 0 ? trackY - rScale(d.rad) - 8 : trackY + rScale(d.rad) + 16;
+            return i % 2 === 0 ? trackY - rScale(d.rad) - 10 : trackY + rScale(d.rad) + 15;
         })
         .attr("text-anchor", "middle")
-        .style("font-size", "11px")
-        .style("fill", "var(--text-muted, #64748b)")
-        .style("pointer-events", "none")
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "10px")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-muted)")
         .text(d => d.name);
 
+    // Dynamic update logic
     function updateChart(mode) {
         let filteredSystems = [];
         let buckets = [];
-        let infoText = "";
 
-        if (mode === "Combined Method") {
+        if (mode === "Combined method") {
             filteredSystems = systems;
             for (let i = 0; i < 8; i++) buckets.push([]);
             filteredSystems.forEach(sys => {
@@ -166,34 +151,34 @@ async function buildAverageSystemComparison() {
                     if (i < 8) buckets[i].push(p);
                 });
             });
-            infoText = `<strong>Combined Method (N = ${filteredSystems.length} systems):</strong> Planet 1 is the median of the innermost planet of EVERY system. Planet 2 is the median of the second planet of every system with at least 2 planets, etc. <em>Note: Distant exoplanets in 1-planet systems can artificially skew the "Planet 1" median outwards, which is why grouping by exact system size is often more accurate.</em>`;
         } else {
             const n = parseInt(mode.split(" ")[0]);
-            filteredSystems = systems.filter(s => s.length === n);
+            filteredSystems = systems.filter(s => s.length >= n);
             for (let i = 0; i < n; i++) buckets.push([]);
             filteredSystems.forEach(sys => {
                 sys.forEach((p, i) => {
                     if (i < n) buckets[i].push(p);
                 });
             });
-            infoText = `<strong>${n} Planet Systems (N = ${filteredSystems.length} systems):</strong> Shows the median orbital distances and radii exclusively for systems that possess exactly ${n} confirmed planet(s).`;
         }
 
-        descText.html(infoText);
+        // Number of systems update
+        d3.select("#dynamic-sys-count").text(`Based on ${window.formatExoNumber(filteredSystems.length)} system(s).`);
 
         const averageSystem = [];
         buckets.forEach((bucket, i) => {
             if (bucket.length > 0) {
                 averageSystem.push({
-                    name: `Exoplanet ${i + 1}`,
+                    name: `Average planet ${i + 1}`,
                     dist: d3.median(bucket, d => d.dist),
                     rad: d3.median(bucket, d => d.rad),
-                    type: "Exoplanet"
+                    type: "Exoplanet",
+                    color: "var(--color-transit)" 
                 });
             }
         });
 
-        const allPlanets = [...averageSystem, ...solarSystem];
+        const allPlanets = [...averageSystem, ...formattedSolarSystem];
 
         planetGroup.selectAll(".planet-node")
             .data(allPlanets, d => d.name + d.type)
@@ -203,38 +188,63 @@ async function buildAverageSystemComparison() {
                     .attr("cx", d => xDist(d.dist))
                     .attr("cy", d => yTrack(d.type === "Solar" ? "solar" : "avg") + yTrack.bandwidth() / 2)
                     .attr("r", 0)
-                    .style("fill", d => d.type === "Solar" ? "#64748b" : "var(--accent-blue, #2563eb)")
-                    .style("stroke", "#ffffff")
+                    .style("fill", d => d.color)
+                    .style("stroke", "var(--bg-card)")
                     .style("stroke-width", 1.5)
                     .style("cursor", "pointer")
                     .on("mouseover", function(event, d) {
-                        d3.select(this).style("stroke", "#000").style("stroke-width", 2).raise();
-                        tooltip.style("opacity", 1).html(`
-                            <strong>${d.name}</strong><br>
-                            Distance: ${d.dist.toFixed(3)} AU<br>
-                            Radius: ${d.rad.toFixed(2)} Earths
+                        d3.select(this).style("stroke", "white").style("stroke-width", 2).raise();
+                        
+                        tooltip.style("transition", "none").style("opacity", 1).html(`
+                            <div class="tt-header">${d.name}</div>
+                            <table style="width: 100%; min-width: 150px; font-size: 0.8rem; margin-top: 8px; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding-bottom: 4px; padding-right: 16px; color: var(--text-light);">Radius:</td>
+                                    <td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${window.formatExoNumber(d.rad, 2)} R<sub>⊕</sub></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-right: 16px; color: var(--text-light);">Distance:</td>
+                                    <td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums;">${window.formatExoNumber(d.dist, 4)} AU</td>
+                                </tr>
+                            </table>
                         `);
                     })
-                    .on("mousemove", function(event) {
-                        tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 20) + "px");
-                    })
-                    .on("mouseout", function(event, d) {
-                        d3.select(this).style("stroke", "#ffffff").style("stroke-width", 1.5);
+                    .on("mousemove", event => tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 20) + "px"))
+                    .on("mouseout", function() {
+                        d3.select(this).style("stroke", "var(--bg-card)").style("stroke-width", 1.5);
                         tooltip.style("opacity", 0);
                     })
-                    .call(enter => enter.transition().duration(500).attr("r", d => rScale(d.rad))),
-                update => update.call(update => update.transition().duration(500)
+                    .call(enter => enter.transition().duration(750).ease(d3.easeCubicOut).attr("r", d => rScale(d.rad))),
+                update => update.call(update => update.transition().duration(750).ease(d3.easeCubicOut)
                     .attr("cx", d => xDist(d.dist))
                     .attr("r", d => rScale(d.rad))),
-                exit => exit.call(exit => exit.transition().duration(500).attr("r", 0).remove())
+                exit => exit.call(exit => exit.transition().duration(400).attr("r", 0).remove())
             );
     }
 
-    select.on("change", function() {
-        updateChart(this.value);
-    });
+    // Link to slider
+    const slider = document.getElementById("planet-slider");
+    const sliderVal = document.getElementById("planet-slider-val");
+    
+    if (slider) {
+        slider.addEventListener("input", function() {
+            const val = parseInt(this.value);
+            if (val === 0) {
+                sliderVal.innerText = "All systems";
+                updateChart("Combined method");
+            } else {
+                sliderVal.innerText = val === 1 ? "1 planet" : `${val} planets`;
+                updateChart(`${val} Planet systems`);
+            }
+        });
+    }
 
-    updateChart("Combined Method");
+    // Initialize
+    updateChart("Combined method");
 }
 
-buildAverageSystemComparison();
+if (window.globalExoplanetData && window.globalExoplanetData.length > 0) {
+    buildAverageSystemComparison();
+} else {
+    document.addEventListener('dataLoaded', buildAverageSystemComparison);
+}

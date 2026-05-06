@@ -1,454 +1,366 @@
-/**
- * Constructs visualisations for a select number of star systems. 
- */
 let allSystems = [];
 
-function normalizeMethod(method) {
-    if (method !== "Transit" && method !== "Radial Velocity" && method !== "Microlensing" && method !== "Imaging") return "Other";
-    return method;
-}
-
-function getFilteredSystems(allSystems, activeMethods, activePlanetCounts) {
-    return allSystems
-        .filter(s => activePlanetCounts.includes(s.planetCount))
-        .filter(s => s.planets.some(p => activeMethods.includes(normalizeMethod(p.method))));
-}
-
-function getActiveCheckboxes(name) {
-    return [...document.querySelectorAll(`input[name="${name}"]:checked`)]
-        .map(el => el.value);
-}
-
-function attachMethodListeners() {
-    document.querySelectorAll("input[name='method']").forEach(input => {
-        input.addEventListener("change", render);
-    });
-}
-
-async function loadData() {
-    const rawData = await getExoplanetData();
+// Main function
+async function buildSystemVisualisation() {
+    const rawData = window.globalExoplanetData;
     if (!rawData || rawData.length === 0) return;
 
-    // Data
+    // Data preparation
+    const normalizeMethod = (m) => {
+        if (!m) return "Other";
+        const lower = m.toLowerCase();
+        if (lower.includes("transit")) return "Transit";
+        if (lower.includes("radial")) return "Radial Velocity"; 
+        if (lower.includes("microlensing")) return "Microlensing";
+        if (lower.includes("imaging")) return "Imaging";
+        return "Other";
+    };
+
     const data = rawData
         .filter(d => d.pl_orbsmax && !isNaN(d.pl_orbsmax) && d.pl_radj && !isNaN(d.pl_radj) && d.sy_pnum && !isNaN(d.sy_pnum))
         .map(d => ({
-            method: d.discoverymethod,
+            method: normalizeMethod(d.discoverymethod),
             distance: +d.pl_orbsmax,
             hostname: d.hostname,
             radius: +d.pl_radj,
             name: d.pl_name,
             planetCount: +d.sy_pnum
-        }))
-    
-    console.log(data)
+        }));
+
     const groupPerHost = d3.group(data, d => d.hostname);
     allSystems = Array.from(groupPerHost, ([hostname, planets]) => ({
         hostname,
         planetCount: planets[0].planetCount,
         planets
-    }));
+    })).sort((a, b) => b.planetCount - a.planetCount || a.hostname.localeCompare(b.hostname)); 
 
-    populatePlanetCountCheckBoxes();
-    attachMethodListeners(); 
-    render();
-    document.getElementById("scroll-area").scrollTop = 0;
-}
-
-function populatePlanetCountCheckBoxes() {
+    // Initiate filters
     const counts = [...new Set(allSystems.map(s => s.planetCount))]
         .filter(n => n >= 1 && n <= 8)
         .sort((a, b) => a - b);
 
-    const container = document.getElementById("planet-count-filters");
-    container.innerHTML = counts.map(n => `
-        <label>
-            <input type="checkbox" name="planetCount" value="${n}" ${n === 8 ? "checked" : ""}>
-            ${n} ${n === 1 ? "planet" : "planets"}
-        </label>
-    `).join("");
+    const countContainer = d3.select("#sys-count-filters");
+    countContainer.selectAll("button")
+        .data(counts)
+        .join("button")
+        .attr("class", "method-btn other")
+        .classed("active", d => d >= 4) // Default to 4+ planets
+        .attr("data-count", d => d)
+        .text(d => `${d} Planets`)
+        .on("click", function(event) {
+            event.stopPropagation(); // FIX: Prevent Exolab.js from hijacking!
+            const btn = d3.select(this);
+            btn.classed("active", !btn.classed("active"));
+            renderSystems();
+        });
 
-    container.querySelectorAll("input").forEach(input => {
-        input.addEventListener("change", render);
+    const methodFilters = document.getElementById("sys-method-filters");
+    const methodClone = methodFilters.cloneNode(true);
+    methodFilters.parentNode.replaceChild(methodClone, methodFilters);
+
+    d3.selectAll("#sys-method-filters .method-btn").on("click", function(event) {
+        event.stopPropagation(); // FIX: Prevent delegated listeners from hijacking
+        event.preventDefault();
+        const btn = d3.select(this);
+        btn.classed("active", !btn.classed("active"));
+        renderSystems();
+    });
+
+    // First render
+    renderSystems();
+    drawSolarSystemBaseline();
+    
+    window.addEventListener("resize", () => {
+        renderSystems();
+        drawSolarSystemBaseline();
     });
 }
 
-function render() {
-    const activeMethods = getActiveCheckboxes("method");
-    const activePlanetCounts = getActiveCheckboxes("planetCount").map(Number);
-    const filteredSystems = getFilteredSystems(allSystems, activeMethods, activePlanetCounts);
+function renderSystems() {
+    const activeMethods = [];
+    d3.selectAll("#sys-method-filters .method-btn.active").each(function() {
+        activeMethods.push(d3.select(this).attr("data-method"));
+    });
+
+    const activePlanetCounts = [];
+    d3.selectAll("#sys-count-filters .method-btn.active").each(function() {
+        activePlanetCounts.push(+d3.select(this).attr("data-count"));
+    });
+
+    // Filter systems based on active toggle buttons
+    const filteredSystems = allSystems
+        .filter(s => activePlanetCounts.includes(s.planetCount))
+        .filter(s => s.planets.some(p => activeMethods.includes(p.method)));
+        
     const planets = filteredSystems.flatMap(s => s.planets);
 
     drawVisualisation(filteredSystems, planets);
 }
 
-function drawVisualisation(systems, planets){
-    d3.select("#systems-svg").selectAll("*").remove();
-    d3.select("#x-axis-svg").selectAll("*").remove();
-    d3.select("#legend-svg").selectAll("*").remove();
-    d3.selectAll(".tooltip").remove();
+// Visualisation of planetary systems (exoplanets)
+function drawVisualisation(systems, planets) {
+    const systemsSvg = d3.select("#systems-svg");
+    const axisSvg = d3.select("#x-axis-svg");
+    
+    systemsSvg.selectAll("*").remove();
+    axisSvg.selectAll("*").remove();
 
     if (systems.length === 0) {
-        d3.select("#systems-svg").append("text")
-            .attr("x", 20).attr("y", 40)
-            .text("No star systems match the current filters.")
-            .style("fill", "var(--text-main, #333)");
+        systemsSvg.append("text")
+            .attr("x", 20).attr("y", 30)
+            .style("font-family", "var(--font-body)")
+            .style("font-size", "14px")
+            .style("fill", "var(--text-muted)")
+            .text("No star systems match the current filters.");
         return;
     }
 
-    // Setup 
     const container = document.getElementById("system-visualisation-container");
-    const containerWidth = container.clientWidth;
-    const margin = { top: 10, right: 40, bottom: 30, left: 70 };
-    const width = containerWidth - margin.left - margin.right;
-    const rowHeight = 60;
-    const height = systems.length * rowHeight;
+    const width = container.clientWidth;
+    const margin = { top: 45, right: 40, bottom: 0, left: 20 }; 
+    const innerWidth = width - margin.left - margin.right;
+    const rowHeight = 50; 
+    const innerHeight = systems.length * rowHeight;
 
-    const axisSvg = d3.select("#x-axis-svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", 80);
-
-    const legendSvg = d3.select("#legend-svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", 40);
-
-    const axisGroup = axisSvg.append("g")
-        .attr("transform", `translate(${margin.left}, 10)`);
-
-    const systemsSvg = d3.select("#systems-svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height);
+    systemsSvg.attr("width", "100%").attr("height", innerHeight + margin.top);
+    axisSvg.attr("width", "100%");
 
     const svg = systemsSvg.append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // Scales
-    const allDistances = planets.map(d => d.distance);
+    const axisGroup = axisSvg.append("g")
+        .attr("transform", `translate(${margin.left}, 0)`);
 
+    const allDistances = planets.map(d => d.distance);
+    if(allDistances.length === 0) return;
+
+    // Log scale for x-axis
     const xScale = d3.scaleLog()
         .domain([d3.min(allDistances), d3.max(allDistances)])
         .nice()
-        .range([0, width]);
+        .range([35, innerWidth]); // Do not overlap star
 
     const yScale = d3.scaleBand()
         .domain(systems.map(d => d.hostname))
-        .range([0, height])
-        .padding(0.2);
+        .range([0, innerHeight])
+        .padding(0.3);
 
-    const sizeScale = d3.scaleLinear()
+    const sizeScale = d3.scaleSqrt()
         .domain(d3.extent(planets, d => d.radius))
-        .range([4, 20]);
+        .range([3, 14]);
 
-    // Format
-    const format = d3.format(".2f");
-    const tooltip = d3.select("body")
-        .append("div")
-        .attr("class", "tooltip")
-        .style("position", "absolute")
-        .style("background", "white")
-        .style("border", "1px solid #ccc")
-        .style("padding", "6px")
-        .style("border-radius", "4px")
-        .style("pointer-events", "none")
-        .style("opacity", 0);
-        
     const colorScale = (method) => {
-        if (method === "Transit") return "var(--color-transit, #2563eb)";
-        if (method === "Radial Velocity") return "var(--color-radial, #ea580c)";
-        if (method === "Microlensing") return "var(--color-microlensing, #16a34a)";
-        if (method === "Imaging") return "var(--color-imaging, #9333ea)";
-        return "var(--color-other, #64748b)";
+        if (method === "Transit") return "var(--color-transit)";
+        if (method === "Radial Velocity") return "var(--color-radial)";
+        if (method === "Microlensing") return "var(--color-microlensing)";
+        if (method === "Imaging") return "var(--color-imaging)";
+        return "var(--color-other)";
     };
 
-    // Picture
+    // Host star header
+    svg.append("text")
+        .attr("x", 0)
+        .attr("y", -20)
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "11px")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-muted)")
+        .text("↓ Host star (not to scale)");
+
+    // Orbit line
     svg.selectAll(".system-line")
         .data(systems)
         .join("line")
         .attr("class", "system-line")
-        .attr("x1", 0)
-        .attr("x2", width)
+        .attr("x1", 0) 
+        .attr("x2", innerWidth)
         .attr("y1", d => yScale(d.hostname) + yScale.bandwidth() / 2)
         .attr("y2", d => yScale(d.hostname) + yScale.bandwidth() / 2)
-        .attr("stroke", "#ccc");
+        .attr("stroke", "var(--border-light)")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "2,4");
 
+    // Host star
+    svg.selectAll(".host-star")
+        .data(systems)
+        .join("circle")
+        .attr("class", "host-star")
+        .attr("cx", 0)
+        .attr("cy", d => yScale(d.hostname) + yScale.bandwidth() / 2)
+        .attr("r", 5)
+        .style("fill", "#fcd34d")
+        .style("stroke", "#fbbf24")
+        .style("stroke-width", 1.5)
+        .style("filter", "drop-shadow(0 0 4px rgba(252, 211, 77, 0.6))");
+
+    // System name
+    svg.selectAll(".system-name")
+        .data(systems)
+        .join("text")
+        .attr("class", "system-name")
+        .attr("x", 0)
+        .attr("y", d => yScale(d.hostname) + yScale.bandwidth() / 2 - 10)
+        .style("font-family", "var(--font-heading)")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .style("fill", "var(--text-dark)")
+        .text(d => d.hostname);
+
+    // Planets
     svg.selectAll(".planet")
         .data(planets)
         .join("circle")
         .attr("class", "planet")
         .attr("cx", d => xScale(d.distance))
         .attr("cy", d => yScale(d.hostname) + yScale.bandwidth() / 2)
-        .attr("r",d => sizeScale(d.radius,2))
-        .style("fill", d => colorScale(normalizeMethod(d.method)))
-        .on("mouseover", (event, d) => {
-        tooltip
-            .style("opacity", 1)
-            .html(`
-                <strong>${d.name}</strong><br>
-                Radius: ${format(d.radius)} Jupiter Radii<br>
-                Distance: ${format(d.distance)} AU<br>
-                Method: ${d.method} 
-            `);
-        })
+        .attr("r", d => sizeScale(d.radius))
+        .style("fill", d => colorScale(d.method))
+        .style("opacity", 0.85)
+        .style("stroke", "var(--bg-card)")
+        .style("stroke-width", 1);
 
-        .on("mousemove", (event) => {
-            tooltip
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY + 10) + "px");
-        })
-
-        .on("mouseout", () => {
-            tooltip.style("opacity", 0);
-        });
-
-    // Axes
-    const yAxis = d3.axisLeft(yScale);
-
-    svg.append("g")
-        .call(yAxis);
-
-    const newFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
-
-    const xTicks = [0.01, 0.1, 1, 10, 100, 1000, 10000];
-    axisGroup.call(
-        d3.axisBottom(xScale)
-            .tickValues(xTicks)
-            .tickFormat(newFormat)
-    );
+    // Clean x-axis
+    const logFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
+    const xTicks = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
+    
+    const xAxis = d3.axisBottom(xScale)
+        .tickValues(xTicks)
+        .tickFormat(logFormat)
+        .tickSizeOuter(0);
+        
+    const gx = axisGroup.append("g").call(xAxis);
+    gx.select(".domain").attr("stroke", "var(--border-light)");
+    gx.selectAll(".tick line").attr("stroke", "var(--border-light)");
+    gx.selectAll(".tick text")
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "11px")
+        .style("fill", "var(--text-muted)")
+        .attr("dy", "10");
 
     axisSvg.append("text")
         .attr("text-anchor", "middle")
-        .attr("x", margin.left + width / 2)
-        .attr("y", 65)
-        .style("fill", "var(--text-main, #333)")
-        .style("font-size", "14px")
-        .style("font-weight", "500")
-        .text("Orbital Distance (AU)");
-
-    /*
-    // Legend
-    const legendCategories = ["Transit", "Radial Velocity", "Microlensing", "Imaging", "Other"];
-    const legendX = margin.left;
-    const legendY = 20;
-    const spacing = 120
-    const legend = legendSvg.append("g")
-        .attr("transform", `translate(${legendX}, ${legendY})`);
-
-    legend.append("rect")
-        .attr("x", -10)
-        .attr("y", -15)
-        .attr("width", legendCategories.length * spacing + 80)
-        .attr("height", 40)
-        .attr("fill", "var(--container-bg, #ffffff)")
-        .attr("opacity", 0.9)
-        .attr("rx", 5)
-
-    legend.selectAll("legendDots")
-        .data(legendCategories)
-        .join("circle")
-        .attr("cx", (d, i) => i * spacing)
-        .attr("cy", 0)
-        .attr("r", 6)
-        .style("fill", d => colorScale(d));
-
-    legend.selectAll("legendLabels")
-        .data(legendCategories)
-        .join("text")
-        .attr("x", (d, i) => i * spacing + 10)
-        .attr("y", 3)
-        .style("font-size", "13px")
-        .style("font-weight", "500")
-        .style("fill", "var(--text-main, #333)")
-        .style("alignment-baseline", "middle")
-        .text(d => d);  
-        */
+        .attr("x", margin.left + innerWidth / 2)
+        .attr("y", 45)
+        .style("font-family", "var(--font-heading)")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .style("text-transform", "uppercase")
+        .style("letter-spacing", "1px")
+        .style("fill", "var(--text-muted)")
+        .text("Orbital distance (AU)");
 }
-loadData();
 
-/*
-    const planets = systems.flatMap(system =>
-        system.planets.map(p => ({
-            ...p,
-            hostname: system.hostname
-        }))
-    );
+// Our own solar system
+function drawSolarSystemBaseline() {
+    const svg = d3.select("#baseline-svg");
+    svg.selectAll("*").remove(); // Clear on resize
 
-    console.log(systems)
-    console.log(planets)
+    const container = document.getElementById("solar-system-baseline");
+    const width = container.clientWidth;
+    const margin = { top: 30, right: 40, bottom: 30, left: 20 };
+    const innerWidth = width - margin.left - margin.right;
+    const height = 120;
 
-    // Space
-    const container = document.getElementById("system-visualisation-container"); 
-    const containerWidth = container.clientWidth;
+    const chart = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    const margin = { top: 10, right: 40, bottom: 30, left: 70};
-    const width = containerWidth - margin.left - margin.right;
-    const rowHeight = 60;
-    const height = systems.length * rowHeight;
-
-    const axisSvg = d3.select("#x-axis-svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", 80);
-
-    const legendSvg = d3.select("#legend-svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", 80);
-
-    const axisGroup = axisSvg.append("g")
-        .attr("transform", `translate(${margin.left},30)`);
-
-    const systemsSvg = d3.select("#systems-svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height);
-
-    const svg = systemsSvg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        
-    const svg = d3.select("#system-visualisation-container")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-    
-
-    // Scales
-
-    const allDistances = data.map(d => d.distance);
-
+    // Match scale of interactive chart
     const xScale = d3.scaleLog()
-        .domain([d3.min(allDistances),d3.max(allDistances)])
-        .nice()
-        .range([0, width]);
-    
-    const yScale = d3.scaleBand()
-        .domain(systems.map(d => d.hostname))
-        .range([0, height])
-        .padding(0.2);
+        .domain([0.1, 40])
+        .range([35, innerWidth]);
 
-    const sizeScale = d3.scaleLinear()
-        .domain(d3.extent(data, d => d.radius,2))
-        .range([4, 20]);  
+    const sizeScale = d3.scaleSqrt()
+        .domain([0, 1.5])
+        .range([3, 16]);
 
-    // Formats
-    const format = d3.format(".2f");
-    const tooltip = d3.select("body")
-        .append("div")
-        .attr("class", "tooltip")
-        .style("position", "absolute")
-        .style("background", "white")
-        .style("border", "1px solid #ccc")
-        .style("padding", "6px")
-        .style("border-radius", "4px")
-        .style("pointer-events", "none")
-        .style("opacity", 0);
-        
-    const colorScale = (method) => {
-        if (method === "Transit") return "var(--color-transit, #2563eb)";
-        if (method === "Radial Velocity") return "var(--color-radial, #ea580c)";
-        if (method === "Microlensing") return "var(--color-microlensing, #16a34a)";
-        if (method === "Imaging") return "var(--color-imaging, #9333ea)";
-        return "var(--color-other, #64748b)";
-    };
+    // Sun label
+    chart.append("text")
+        .attr("x", 0).attr("y", -20)
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "11px")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-muted)")
+        .text("↓ The Sun (not to scale)");
 
-    // Picture 
-    svg.selectAll(".system-line")
-        .data(systems)
-        .join("line")
-        .attr("class", "system-line")
-        .attr("x1", 0)
-        .attr("x2", width)
-        .attr("y1", d => yScale(d.hostname) + yScale.bandwidth() / 2)
-        .attr("y2", d => yScale(d.hostname) + yScale.bandwidth() / 2)
-        .attr("stroke", "#ccc");
+    // Orbit line
+    chart.append("line")
+        .attr("x1", 0).attr("x2", innerWidth)
+        .attr("y1", height / 3).attr("y2", height / 3)
+        .attr("stroke", "var(--border-light)")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "2,4");
 
-    svg.selectAll(".planet")
-        .data(planets)
-        .join("circle")
-        .attr("class", "planet")
-        .attr("cx", d => xScale(d.distance))
-        .attr("cy", d => yScale(d.hostname) + yScale.bandwidth() / 2)
-        .attr("r",d => sizeScale(d.radius,2))
-        .style("fill", d => colorScale(normalizeMethod(d.method)))
-        .on("mouseover", (event, d) => {
-        tooltip
-            .style("opacity", 1)
-            .html(`
-                <strong>${d.name}</strong><br>
-                Radius: ${format(d.radius)} Jupiter Radii<br>
-                Distance: ${format(d.distance)} AU<br>
-                Method: ${d.method} 
-            `);
-        })
-
-        .on("mousemove", (event) => {
-            tooltip
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY + 10) + "px");
-        })
-
-        .on("mouseout", () => {
-            tooltip.style("opacity", 0);
-        });
-
-    // Axes
-    const niceFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
-
-    const yAxis = d3.axisLeft(yScale);
-
-    svg.append("g")
-        .call(yAxis);
-
-    axisGroup.call(
-        d3.axisBottom(xScale)
-            .ticks(10)
-            .tickFormat(niceFormat)
-    );
-
-    axisSvg.append("text")
-        .attr("text-anchor", "middle")
-        .attr("x", margin.left + width / 2)
-        .attr("y", 65)
-        .style("fill", "var(--text-main, #333)")
-        .style("font-size", "14px")
-        .style("font-weight", "500")
-        .text("Orbital Distance (AU)");
-
-    // Legend
-    const legendCategories = ["Transit", "Radial Velocity", "Microlensing", "Imaging", "Other"];
-    const legendX = margin.left;
-    const legendY = 20;
-    const spacing = 120
-    const legend = legendSvg.append("g")
-        .attr("transform", `translate(${legendX}, ${legendY})`);
-
-    legend.append("rect")
-        .attr("x", -10)
-        .attr("y", -15)
-        .attr("width", legendCategories.length * spacing + 80)
-        .attr("height", 40)
-        .attr("fill", "var(--container-bg, #ffffff)")
-        .attr("opacity", 0.9)
-        .attr("rx", 5)
-
-    legend.selectAll("legendDots")
-        .data(legendCategories)
-        .join("circle")
-        .attr("cx", (d, i) => i * spacing)
-        .attr("cy", 0)
+    // Sun
+    chart.append("circle")
+        .attr("cx", 0).attr("cy", height / 3)
         .attr("r", 6)
-        .style("fill", d => colorScale(d));
+        .style("fill", "#fcd34d")
+        .style("stroke", "#fbbf24")
+        .style("stroke-width", 1.5)
+        .style("filter", "drop-shadow(0 0 5px rgba(252, 211, 77, 0.8))");
 
-    legend.selectAll("legendLabels")
-        .data(legendCategories)
+    // Planets
+    chart.selectAll(".sol-planet")
+        .data(solarSystem)
+        .join("circle")
+        .attr("cx", d => xScale(d.distance))
+        .attr("cy", height / 3)
+        .attr("r", d => sizeScale(d.radius))
+        .style("fill", d => d.color)
+
+    // Planet labels
+    chart.selectAll(".sol-label")
+        .data(solarSystem)
         .join("text")
-        .attr("x", (d, i) => i * spacing + 10)
-        .attr("y", 3)
-        .style("font-size", "13px")
-        .style("font-weight", "500")
-        .style("fill", "var(--text-main, #333)")
-        .style("alignment-baseline", "middle")
-        .text(d => d);  
+        .attr("x", d => xScale(d.distance))
+        .attr("y", d => (height / 3) + d.labelOffset)
+        .attr("text-anchor", "middle")
+        .style("dominant-baseline", "middle")
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "10px")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-dark)")
+        .text(d => d.name);
+
+    // Clean x-axis
+    const logFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
+    const xTicks = [0.1, 1, 10];
+    
+    const xAxis = d3.axisBottom(xScale)
+        .tickValues(xTicks)
+        .tickFormat(logFormat)
+        .tickSizeOuter(0);
+        
+    const gx = chart.append("g")
+        .attr("transform", `translate(0, ${height - 40})`)
+        .call(xAxis);
+        
+    gx.select(".domain").attr("stroke", "var(--border-light)");
+    gx.selectAll(".tick line").attr("stroke", "var(--border-light)");
+    gx.selectAll(".tick text")
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "10px")
+        .style("fill", "var(--text-muted)");
 }
 
-buildSystemVisualisation();
-*/
+// Lazy loading
+function initSystemsWhenVisible() {
+    const container = document.getElementById("solar-system-baseline");
+    if (!container) return;
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                buildSystemVisualisation();
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: "300px 0px" });
+
+    observer.observe(container);
+}
+
+if (window.globalExoplanetData && window.globalExoplanetData.length > 0) {
+    initSystemsWhenVisible();
+} else {
+    document.addEventListener('dataLoaded', initSystemsWhenVisible);
+}

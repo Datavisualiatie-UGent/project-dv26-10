@@ -1,91 +1,56 @@
-/**
- * Builds an interactive boxplot comparing measurement precision
- * across exoplanet discovery methods.
- *
- * - Supports multiple metrics (orbital period, distance, mass) via a segmented control
- * - Uses relative error to compute precision (higher is better)
- * - Displays Q1, median, Q3, and 5–95% whiskers on a log scale
- * - Includes tooltip interaction for detailed values
- */
+
 async function buildMeasurementPrecisionPlot() {
-    const rawData = await getExoplanetData();
+    const rawData = window.globalExoplanetData;
     if (!rawData || rawData.length === 0) return;
 
-    const mainMethods = ["Transit", "Radial Velocity", "Microlensing", "Imaging"];
+    const mainMethods = ["Transit", "Radial velocity", "Microlensing", "Imaging"];
 
     const metricOptions = {
-        orbper: {
-            valueKey: "pl_orbper",
-            err1Key: "pl_orbpererr1",
-            err2Key: "pl_orbpererr2"
-        },
-        orbsmax: {
-            valueKey: "pl_orbsmax",
-            err1Key: "pl_orbsmaxerr1",
-            err2Key: "pl_orbsmaxerr2"
-        },
-        bmasse: {
-            valueKey: "pl_bmasse",
-            err1Key: "pl_bmasseerr1",
-            err2Key: "pl_bmasseerr2"
-        }
+        orbper: { valueKey: "pl_orbper", err1Key: "pl_orbpererr1", err2Key: "pl_orbpererr2", title: "Orbital Period" },
+        orbsmax: { valueKey: "pl_orbsmax", err1Key: "pl_orbsmaxerr1", err2Key: "pl_orbsmaxerr2", title: "Orbital Distance" },
+        bmasse: { valueKey: "pl_bmasse", err1Key: "pl_bmasseerr1", err2Key: "pl_bmasseerr2", title: "Planet Mass" }
     };
 
+    // Data preparation
     function computeBoxStats(values) {
         const sorted = values.slice().sort(d3.ascending);
-
-        const q1 = d3.quantileSorted(sorted, 0.25);
-        const median = d3.quantileSorted(sorted, 0.5);
-        const q3 = d3.quantileSorted(sorted, 0.75);
-
-        const min = d3.quantileSorted(sorted, 0.05);
-        const max = d3.quantileSorted(sorted, 0.95);
-
         return {
-            q1,
-            median,
-            q3,
-            min,
-            max
+            q1: d3.quantileSorted(sorted, 0.25),
+            median: d3.quantileSorted(sorted, 0.5),
+            q3: d3.quantileSorted(sorted, 0.75),
+            min: d3.quantileSorted(sorted, 0.05), // 5th percentile
+            max: d3.quantileSorted(sorted, 0.95)  // 95th percentile
         };
     }
 
     const parseNumber = value => {
-        if (value == null) return null;
-        if (typeof value === "string" && value.trim() === "") return null;
-
+        if (value == null || (typeof value === "string" && value.trim() === "")) return null;
         const num = Number(value);
         return Number.isFinite(num) ? num : null;
     };
 
     function prepareData(config) {
-        const data = rawData
-            .map(d => {
-                if (!d.discoverymethod || !mainMethods.includes(d.discoverymethod)) {
-                    return null;
-                }
+        const data = rawData.map(d => {
+            let m = d.discoverymethod;
+            if (m === "Radial Velocity") m = "Radial velocity";
+            if (!m || !mainMethods.includes(m)) return null;
 
-                const value = parseNumber(d[config.valueKey]);
-                const err1 = parseNumber(d[config.err1Key]);
-                const err2 = parseNumber(d[config.err2Key]);
+            const value = parseNumber(d[config.valueKey]);
+            const err1 = parseNumber(d[config.err1Key]);
+            const err2 = parseNumber(d[config.err2Key]);
 
-                if (value == null || value <= 0) return null;
-                if (err1 == null || err2 == null) return null;
+            if (value == null || value <= 0 || err1 == null || err2 == null) return null;
 
-                const absErr = (Math.abs(err1) + Math.abs(err2)) / 2;
-                if (!Number.isFinite(absErr) || absErr <= 0) return null;
+            const absErr = (Math.abs(err1) + Math.abs(err2)) / 2;
+            if (!Number.isFinite(absErr) || absErr <= 0) return null;
 
-                const relErr = absErr / value;
-                const precision = 1 / relErr;
+            const relErr = absErr / value;
+            const precision = 1 / relErr;
 
-                if (!Number.isFinite(precision) || precision <= 0) return null;
+            if (!Number.isFinite(precision) || precision <= 0) return null;
 
-                return {
-                    method: d.discoverymethod,
-                    precision
-                };
-            })
-            .filter(d => d != null);
+            return { method: m, precision };
+        }).filter(Boolean);
 
         const grouped = d3.group(data, d => d.method);
 
@@ -93,206 +58,223 @@ async function buildMeasurementPrecisionPlot() {
             .filter(method => grouped.has(method) && grouped.get(method).length > 0)
             .map(method => {
                 const values = grouped.get(method).map(d => d.precision);
-                const stats = computeBoxStats(values);
-
-                return {
-                    method,
-                    values,
-                    ...stats
-                };
+                return { method, values, ...computeBoxStats(values) };
             });
     }
 
-    function formatPrecision(x) {
-        if (x == null || !Number.isFinite(x)) return "Unknown";
-        if (x >= 1000) return d3.format(",.0f")(x);
-        if (x >= 10) return d3.format(",.1f")(x);
-        return d3.format(".2f")(x);
-    }
-
-    const methodColors = {
-        "Transit": "var(--color-transit, #2563eb)",
-        "Radial Velocity": "var(--color-radial, #ea580c)",
-        "Microlensing": "var(--color-microlensing, #16a34a)",
-        "Imaging": "var(--color-imaging, #9333ea)"
+    const colorScale = (method) => {
+        if (method === "Transit") return "var(--color-transit)";
+        if (method === "Radial velocity") return "var(--color-radial)";
+        if (method === "Microlensing") return "var(--color-microlensing)";
+        if (method === "Imaging") return "var(--color-imaging)";
+        return "var(--color-other)";
     };
 
+    // Dimensions and lay-out
+    const container = document.getElementById("precision-plot-container");
+    container.innerHTML = ""; // Clear existing
+
+    const width = 1050;
+    const height = 450;
+    const margin = { top: 30, right: 20, bottom: 60, left: 85 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const svg = d3.select("#precision-plot-container")
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .style("width", "100%")
+        .style("height", "auto");
+
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    let tooltip = d3.select("body").select(".exo-tooltip");
+    if (tooltip.empty()) {
+        tooltip = d3.select("body").append("div").attr("class", "exo-tooltip").style("pointer-events", "none");
+    }
+
+    // Scales
+    const x = d3.scaleBand()
+        .domain(mainMethods)
+        .range([0, innerWidth])
+        .padding(0.4);
+    
+    let y = d3.scaleLog().range([innerHeight, 0]);
+
+    const gridGroup = g.append("g").attr("class", "grid").attr("opacity", 0.08);
+    const boxContainer = g.append("g").attr("class", "boxes-container");
+    const gx = g.append("g").attr("transform", `translate(0,${innerHeight})`);
+    const gy = g.append("g");
+
+    gx.call(d3.axisBottom(x).tickSizeOuter(0));
+    gx.select(".domain").attr("stroke", "var(--border-light)");
+    gx.selectAll(".tick line").attr("opacity", 0);
+    gx.selectAll("text")
+        .style("font-family", "var(--font-heading)")
+        .style("font-size", "12px")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-dark)")
+        .attr("dy", "1em");
+
+    g.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -innerHeight / 2)
+        .attr("y", -65)
+        .attr("text-anchor", "middle")
+        .style("font-family", "var(--font-heading)")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .style("text-transform", "uppercase")
+        .style("letter-spacing", "1px")
+        .style("fill", "var(--text-muted)")
+        .text(`Precision (1 / Rel. Error)`);
+
+    /// Highlight logic for microlensing
+    const highlightMethod = (targetMethod) => {
+        boxContainer.selectAll(".box-group").style("opacity", d => d.method === targetMethod ? 1 : 0.1);
+        d3.selectAll(".highlight-action").style("opacity", function() {
+            return d3.select(this).attr("data-method") === targetMethod ? 1 : 0.4;
+        });
+    };
+
+    const resetHighlights = () => {
+        boxContainer.selectAll(".box-group").style("opacity", 1);
+        d3.selectAll(".highlight-action").style("opacity", 1);
+    };
+
+    d3.selectAll(".highlight-action")
+        .on("mouseenter", function() { highlightMethod(d3.select(this).attr("data-method")); })
+        .on("mouseleave", resetHighlights);
+
+    // Dynamic rendering for change between views
     function render(metricKey) {
         const config = metricOptions[metricKey];
         const boxData = prepareData(config);
+        if (!boxData || boxData.length === 0) return;
 
-        d3.select("#precision-plot-container").selectAll("*").remove();
-
-        if (!boxData || boxData.length === 0) {
-            d3.select("#precision-plot-container")
-                .append("p")
-                .style("color", "var(--text-muted)")
-                .text("No valid data available for this metric.");
-            return;
-        }
-
-        const container = document.getElementById("precision-plot-container");
-        const width = container.clientWidth || 900;
-        const height = 500;
-        const margin = { top: 30, right: 30, bottom: 80, left: 110 };
-
-        const innerWidth = width - margin.left - margin.right;
-        const innerHeight = height - margin.top - margin.bottom;
-
-        const svg = d3.select("#precision-plot-container")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height);
-
-        const g = svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        const x = d3.scaleBand()
-            .domain(boxData.map(d => d.method))
-            .range([0, innerWidth])
-            .padding(0.35);
-
+        // Calculate range
         const yMin = d3.min(boxData, d => d.min);
         const yMax = d3.max(boxData, d => d.max);
+        
+        y.domain([Math.max(0.1, yMin * 0.5), yMax * 2]).nice();
 
-        if (!Number.isFinite(yMin) || !Number.isFinite(yMax) || yMin <= 0 || yMax <= 0) {
-            d3.select("#precision-plot-container").selectAll("*").remove();
-            d3.select("#precision-plot-container")
-                .append("p")
-                .style("color", "var(--text-muted)")
-                .text("The selected metric cannot be shown on a log scale.");
-            return;
-        }
+        const getPowersOf10 = (min, max) => {
+            const start = Math.floor(Math.log10(min));
+            const end = Math.ceil(Math.log10(max));
+            return d3.range(start, end + 1).map(p => Math.pow(10, p));
+        };
+        const yTicks = getPowersOf10(y.domain()[0], y.domain()[1]);
 
-        const y = d3.scaleLog()
-            .domain([yMin * 0.9, yMax * 1.1])
-            .range([innerHeight, 0])
-            .nice();
+        const t = svg.transition().duration(1000).ease(d3.easeCubicInOut);
 
-        const xAxis = g.append("g")
-            .attr("transform", `translate(0,${innerHeight})`)
-            .call(d3.axisBottom(x));
+        const logFormat = d => Number(d).toLocaleString("en-GB");
 
-        xAxis.selectAll("text")
-            .style("font-size", "12px")
-            .style("fill", "var(--text-main)")
-            .style("text-anchor", "middle")
-            .attr("dy", "0.8em");
+        gridGroup.transition(t)
+            .call(d3.axisLeft(y).tickValues(yTicks).tickSize(-innerWidth).tickFormat(""));
+        
+        gy.transition(t)
+            .call(d3.axisLeft(y).tickValues(yTicks).tickFormat(logFormat).tickSizeOuter(0))
+            .on("end", function() {
+                d3.select(this).select(".domain").attr("stroke", "var(--border-light)");
+                d3.select(this).selectAll(".tick line").attr("stroke", "var(--border-light)");
+                d3.select(this).selectAll("text").style("font-family", "var(--font-body)").style("font-variant-numeric", "tabular-nums").style("fill", "var(--text-muted)");
+            });
 
-        const yAxis = g.append("g")
-            .call(
-                d3.axisLeft(y)
-                    .tickValues(
-                        y.ticks().filter(d => Number.isInteger(Math.log10(d)))
-                    )
-                    .tickFormat(d => d3.format(",")(d))
-            );
+        gy.select(".domain").attr("stroke", "var(--border-light)");
+        gy.selectAll(".tick line").attr("stroke", "var(--border-light)");
+        gy.selectAll("text").style("font-family", "var(--font-body)").style("font-variant-numeric", "tabular-nums").style("fill", "var(--text-muted)");
+        
+        const boxes = boxContainer.selectAll(".box-group")
+            .data(boxData, d => d.method);
 
-        yAxis.selectAll("text")
-            .style("fill", "var(--text-main)")
-            .style("font-size", "12px");
-
-        g.append("text")
-            .attr("class", "axis-label")
-            .attr("transform", "rotate(-90)")
-            .attr("x", -innerHeight / 2)
-            .attr("y", -78)
-            .attr("text-anchor", "middle")
-            .text("Measurement precision (higher is better)");
-
-        const tooltip = d3.select("body")
-            .selectAll(".d3-tooltip-precision")
-            .data([null])
-            .join("div")
-            .attr("class", "d3-tooltip d3-tooltip-precision")
-            .style("opacity", 0);
-
-        const boxGroups = g.selectAll(".box-group")
-            .data(boxData)
-            .join("g")
+        const boxesEnter = boxes.enter().append("g")
             .attr("class", "box-group")
+            .attr("data-method", d => d.method)
             .attr("transform", d => `translate(${x(d.method)},0)`);
 
-        boxGroups.append("line")
-            .attr("x1", x.bandwidth() / 2)
-            .attr("x2", x.bandwidth() / 2)
+        boxesEnter.append("line").attr("class", "whisker")
+            .attr("x1", x.bandwidth() / 2).attr("x2", x.bandwidth() / 2)
+            .attr("y1", innerHeight).attr("y2", innerHeight) // Start at bottom
+            .attr("stroke", "var(--text-muted)").attr("stroke-width", 1.5).style("opacity", 0.6);
+
+        boxesEnter.append("rect").attr("class", "iqr-box")
+            .attr("x", 0).attr("y", innerHeight).attr("width", x.bandwidth()).attr("height", 0) // Start flat
+            .attr("rx", 4).attr("fill", d => colorScale(d.method)).attr("opacity", 0.8);
+
+        boxesEnter.append("line").attr("class", "median-line")
+            .attr("x1", 2).attr("x2", x.bandwidth() - 2)
+            .attr("y1", innerHeight).attr("y2", innerHeight)
+            .attr("stroke", "white").attr("stroke-width", 2.5).style("pointer-events", "none");
+
+        const boxesMerge = boxesEnter.merge(boxes);
+
+        boxesMerge.select(".whisker").transition(t)
             .attr("y1", d => y(d.min))
-            .attr("y2", d => y(d.max))
-            .attr("stroke", "var(--text-muted, #64748b)")
-            .attr("stroke-width", 1.5);
+            .attr("y2", d => y(d.max));
 
-        boxGroups.append("line")
-            .attr("x1", x.bandwidth() * 0.25)
-            .attr("x2", x.bandwidth() * 0.75)
-            .attr("y1", d => y(d.min))
-            .attr("y2", d => y(d.min))
-            .attr("stroke", "var(--text-muted, #64748b)")
-            .attr("stroke-width", 1.5);
-
-        boxGroups.append("line")
-            .attr("x1", x.bandwidth() * 0.25)
-            .attr("x2", x.bandwidth() * 0.75)
-            .attr("y1", d => y(d.max))
-            .attr("y2", d => y(d.max))
-            .attr("stroke", "var(--text-muted, #64748b)")
-            .attr("stroke-width", 1.5);
-
-        boxGroups.append("rect")
-            .attr("x", 0)
+        boxesMerge.select(".iqr-box").transition(t)
             .attr("y", d => y(d.q3))
-            .attr("width", x.bandwidth())
-            .attr("height", d => Math.max(1, y(d.q1) - y(d.q3)))
-            .attr("rx", 5)
-            .attr("fill", d => methodColors[d.method])
-            .attr("opacity", 0.85)
+            .attr("height", d => Math.max(2, y(d.q1) - y(d.q3)));
+
+        boxesMerge.select(".median-line").transition(t)
+            .attr("y1", d => y(d.median))
+            .attr("y2", d => y(d.median));
+
+        boxesMerge.select(".iqr-box")
             .on("mouseover", function(event, d) {
-                tooltip
-                    .style("opacity", 1)
-                    .html(`
-                        <strong>${d.method}</strong>
-                        Q1: ${formatPrecision(d.q1)}<br>
-                        Median: ${formatPrecision(d.median)}<br>
-                        Q3: ${formatPrecision(d.q3)}<br>
-                        Planets: ${d3.format(",")(d.values.length)}
-                    `)
+                d3.select(this).style("filter", "brightness(1.2)");
+                tooltip.style("transition", "none").style("opacity", 1).html(`
+                    <div class="tt-header">${d.method}</div>
+                    <table style="width: 100%; min-width: 160px; font-size: 0.8rem; margin-top: 8px; border-collapse: collapse;">
+                        <tr><td style="padding-bottom: 4px; color: var(--text-light);">95th pctl:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${window.formatExoNumber(d.max, 1)}</td></tr>
+                        <tr><td style="padding-bottom: 4px; color: var(--text-light);">Median:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px; color: ${colorScale(d.method)};">${window.formatExoNumber(d.median, 1)}</td></tr>
+                        <tr><td style="padding-bottom: 4px; color: var(--text-light);">5th pctl:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${window.formatExoNumber(d.min, 1)}</td></tr>
+                        <tr style="border-top: 1px solid rgba(255,255,255,0.2);"><td style="padding-top: 6px; color: var(--text-light);">Sample size:</td><td style="text-align: right; padding-top: 6px;">${window.formatExoNumber(d.values.length)}</td></tr>
+                    </table>
+                `);
             })
-            .on("mousemove", function(event) {
-                tooltip
-                    .style("left", `${event.pageX + 15}px`)
-                    .style("top", `${event.pageY - 20}px`);
-            })
+            .on("mousemove", event => tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 20) + "px"))
             .on("mouseleave", function() {
+                d3.select(this).style("filter", "none");
                 tooltip.style("opacity", 0);
             });
 
-        boxGroups.append("line")
-            .attr("x1", 0)
-            .attr("x2", x.bandwidth())
-            .attr("y1", d => y(d.median))
-            .attr("y2", d => y(d.median))
-            .attr("stroke", "white")
-            .attr("stroke-width", 2)
-            .style("pointer-events", "none");
+        boxes.exit().transition(t).style("opacity", 0).remove();
     }
 
-    const toggle = document.getElementById("precision-toggle");
-    if (!toggle) {
-        render("orbper");
-        return;
-    }
+    // Button controls
+    const toggleMetric = (metric) => {
+        d3.selectAll("#precision-toggle button").classed("active", false);
+        d3.select(`#precision-toggle button[data-metric="${metric}"]`).classed("active", true);
+        render(metric);
+    };
 
-    const buttons = toggle.querySelectorAll("button");
+    d3.selectAll("#precision-toggle button").on("click", function() { toggleMetric(d3.select(this).attr("data-metric")); });
+    d3.selectAll(".metric-action").on("click", function() { toggleMetric(d3.select(this).attr("data-metric")); });
 
-    buttons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            buttons.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            render(btn.dataset.metric);
-        });
-    });
-
-    const activeButton = toggle.querySelector("button.active");
-    render(activeButton ? activeButton.dataset.metric : "orbper");
+    // Initial Load
+    toggleMetric("orbper");
 }
 
-buildMeasurementPrecisionPlot();
+// Lazy load
+function initPrecisionWhenVisible() {
+    const container = document.getElementById("precision-plot-container");
+    if (!container) return;
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                buildMeasurementPrecisionPlot();
+                obs.unobserve(entry.target); 
+            }
+        });
+    }, { rootMargin: "500px 0px" });
+
+    observer.observe(container);
+}
+
+if (window.globalExoplanetData && window.globalExoplanetData.length > 0) {
+    initPrecisionWhenVisible();
+} else {
+    document.addEventListener('dataLoaded', initPrecisionWhenVisible);
+}

@@ -1,0 +1,144 @@
+/* --- AVERAGE SYSTEM SLIDER --- */
+input[type=range]#planet-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    outline: none; 
+    user-select: none; 
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+}
+
+/* The track */
+input[type=range]#planet-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    border-radius: 3px;
+}
+input[type=range]#planet-slider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    border-radius: 3px;
+}
+
+/* Drag dot */
+input[type=range]#planet-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--accent-glow);
+    margin-top: -6px; /* Perfectly centers thumb on the invisible 6px track */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 0.1s, background-color 0.1s;
+}
+input[type=range]#planet-slider::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--accent-glow);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 0.1s, background-color 0.1s;
+}
+
+/* Hover & drag */
+input[type=range]#planet-slider::-webkit-slider-thumb:hover,
+input[type=range]#planet-slider::-moz-range-thumb:hover {
+    background-color: #f8fafc;
+    transform: scale(1.15);
+}
+input[type=range]#planet-slider::-webkit-slider-thumb:active,
+input[type=range]#planet-slider::-moz-range-thumb:active {
+    background-color: var(--accent-glow);
+    transform: scale(1.15);
+}
+
+/* --- EXPLORABLE TEXT (METHOD SPECIFIC) --- */
+.method-action {
+    background: transparent;
+    cursor: default;
+}
+
+/* Transit */
+.method-action[data-method="Transit"] {
+    color: var(--color-transit);
+    border-bottom: 2px dotted var(--color-transit);
+}
+.method-action[data-method="Transit"]:hover {
+    background: var(--color-transit);
+    color: white;
+    border-bottom-color: transparent;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+/* Radial velocity */
+.method-action[data-method="Radial velocity"] {
+    color: var(--color-radial);
+    border-bottom: 2px dotted var(--color-radial);
+}
+.method-action[data-method="Radial velocity"]:hover {
+    background: var(--color-radial);
+    color: white; border-bottom-color: transparent;
+    box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+}
+
+/* Microlensing */
+.method-action[data-method="Microlensing"] {
+    color: var(--color-microlensing);
+    border-bottom: 2px dotted var(--color-microlensing);
+}
+.method-action[data-method="Microlensing"]:hover {
+    background: var(--color-microlensing);
+    color: white; border-bottom-color: transparent;
+    box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+}
+
+/* Imaging */
+.method-action[data-method="Imaging"] {
+    color: var(--color-imaging);
+    border-bottom: 2px dotted var(--color-imaging);
+}
+.method-action[data-method="Imaging"]:hover {
+    background: var(--color-imaging);
+    color: white; border-bottom-color: transparent;
+    box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+}
+
+/* --- HABITABLE ZONE --- */
+.hz-action {
+    background: transparent;
+    cursor: default;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    padding: 0 4px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Scorching hot worlds (red theme) */
+.hz-action[data-type="hot"] { 
+    color: #ef4444; 
+    border-bottom: 2px dotted #ef4444; 
+}
+.hz-action[data-type="hot"]:hover { 
+    background-color: #ef4444; 
+    color: #ffffff !important; 
+    border-bottom-color: transparent;
+}
+
+/* Habitable candidates (green theme) */
+.hz-action[data-type="hz"] { 
+    color: #10b981; 
+    border-bottom: 2px dotted #10b981; 
+}
+.hz-action[data-type="hz"]:hover { 
+    background-color: #10b981; 
+    color: #ffffff !important; 
+    border-bottom-color: transparent;
+}

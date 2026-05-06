@@ -1,0 +1,170 @@
+/* --- METRICS COUNTERS --- */
+.metrics-flex {
+    display: flex;
+    justify-content: center;
+    gap: 8rem;
+    margin-top: 2rem;
+    padding-top: .5rem;
+}
+
+.metric-block { 
+    text-align: center; 
+}
+
+.metric-number {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.metric-label {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.dataset-date {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 1.5rem;
+    font-style: italic;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+    .metrics-flex {
+        flex-direction: column;
+        gap: 3rem;
+    }
+}
+
+/* --- INTERACTIVE CARDS & GRIDS --- */
+.cards-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+.two-cols {
+    grid-template-columns: repeat(2, 1fr);
+}
+.methods-grid { 
+    display: grid; 
+    gap: 1.5rem; 
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+@media (min-width: 1000px) {
+    .methods-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .methods-grid .method-card {
+        grid-column: span 2;
+    }
+    
+    .methods-grid .method-card:nth-child(4) {
+        grid-column: 2 / span 2; 
+    }
+    
+    .methods-grid .method-card:nth-child(5) {
+        grid-column: 4 / span 2;
+    }
+}
+
+.interactive-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: block; 
+    color: inherit;
+}
+.interactive-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+.interactive-card h3 {
+    font-size: 1.4rem;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+}
+.interactive-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.card-link {
+    display: inline-block;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--color-transit);
+    margin-top: 1rem;
+}
+
+.method-card { 
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid var(--border-light);
+    border-top: 4px solid var(--border-light);
+    box-shadow: var(--shadow-card);
+}
+.method-card h3 {
+    font-size: 1.4rem;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+}
+.method-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Method specific top border colors */
+.method-card.transit {
+    border-top-color: var(--color-transit);
+}
+.method-card.radial {
+    border-top-color: var(--color-radial);
+}
+.method-card.microlensing {
+    border-top-color: var(--color-microlensing);
+}
+.method-card.imaging {
+    border-top-color: var(--color-imaging);
+}
+.method-card.other {
+    border-top-color: var(--color-other);
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS (Media Queries) 
+   ========================================= */
+
+@media (max-width: 768px) {
+    /* Metrics grid*/
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+
+    .metric-number {
+        font-size: 2.8rem;
+    }
+
+    /* Card grids */
+    .two-cols {
+        grid-template-columns: 1fr;
+    }
+
+    .methods-grid {
+        grid-template-columns: 1fr;
+    }
+}

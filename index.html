@@ -3,136 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exploring Exoplanets Through Data</title>
-
+    <title>Exoplanets | Exploring distant worlds through data</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/index.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-
 <body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="nav-logo" href="index.html">Exo<span>planets</span>.</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Overview</a></li>
+                <li><a href="explore.html">Explore dataset</a></li>
+                <li><a href="story.html">Are we unique?</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="atmosphere-bg">
+        <div class="stars"></div>
+        <div class="hero-content">
+            <h1>Exoplanets</h1>
+            <p class="subtitle">Exploring distant worlds through data</p>
+            <p class="intro-text">
+                For ages, people looked up at the stars and thought we were all alone.
+                Today, we know the galaxy is full of <strong>exoplanets</strong>, which are planets orbiting stars other than our own Sun. It feels like we should have plenty of neighbours. Yet, so far, our own Solar System still looks weirdly unique. This project digs into the data to see if we really are special, or if we’re just limited by the tools we use to look for them.
+            </p>
+        </div>
+    </header>
+
     <main>
-        <div class="container">
-            <h1>Exoplanet discovery methods</h1>
-            <p class="lead">Which techniques are most frequently used to detect exoplanets?</p>
-            
-            <div class="note" style="margin-bottom: 2rem;">
-                <p><strong>Interactive Timeline:</strong> Drag the handles left or right to filter by year. 
-                <strong>Click the "Other" bar</strong> to zoom in and see a breakdown of the rarer discovery methods!</p>
-            </div>
-            
-            <div id="timeline-container" style="margin-bottom: 20px;"></div>
-            
-            <div id="bar-chart-container" style="position: relative;">
-                <button id="back-btn" class="btn btn-primary" 
-                    style="display: none; cursor: pointer; padding: 5px 15px; border-radius: 5px; border: none; background-color: var(--accent-blue, #2563eb); color: white; font-weight: bold;">
-                    &larr; Back to main view
-                </button>
-            </div>
-        </div>
-
-        <div class="container" style="margin-top: 40px;">
-            <h2>A high level visualisation of the star systems.</h2>
-            <p>Use the checkboxes below to filter by discovery method or by number of planets in each star system.
-                Once one planet in the system is drawn, all other planets of the system are included.
-                The x-axis uses a log-scale and on the y-axis you can find the name of each system. 
+        <section class="main-container overlap-container">
+            <h2>The dataset</h2>
+            <p class="section-desc">
+                The source of our data is a database of astronomical data and information on exoplanets and their host stars: <a href="https://exoplanetarchive.ipac.caltech.edu/" target="_blank" rel="noopener noreferrer">the NASA Exoplanet Archive</a>. It compiles discoveries from ground-based observatories and space telescopes. Behind every data point is at least one scientific paper confirming the existence of a world beyond our solar system.
             </p>
             
-            <div class="filters">
-                <div class="filter-group">
-                    <strong>Discovery Method</strong>
-                    <label class="method-transit"><input type="checkbox" name="method" value="Transit" checked> Transit</label>
-                    <label class="method-radial"><input type="checkbox" name="method" value="Radial Velocity" checked> Radial Velocity</label>
-                    <label class="method-microlensing"><input type="checkbox" name="method" value="Microlensing" checked> Microlensing</label>
-                    <label class="method-imaging"><input type="checkbox" name="method" value="Imaging" checked> Imaging</label>
-                    <label class="method-other"><input type="checkbox" name="method" value="Other" checked> Other</label>
+            <div class="metrics-flex">
+                <div class="metric-block">
+                    <div class="metric-number" id="planet-counter" data-target="0">...</div>
+                    <div class="metric-label">Confirmed planets*</div>
                 </div>
-                <div class="filter-group">
-                    <strong>Number of Planets</strong>
-                    <div id="planet-count-filters"></div>
+                <div class="metric-block">
+                    <div class="metric-number" id="system-counter" data-target="0">...</div>
+                    <div class="metric-label">Planetary systems*</div>
                 </div>
             </div>
 
-            <div id="system-visualisation-container">
-                <div id="scroll-area" style="height: 400px; overflow-y: auto;">
-                    <svg id="systems-svg"></svg>
-                </div>
-                <svg id="x-axis-svg" height="40"></svg>
+            <div class="dataset-date" id="dataset-date-display">* Loading ...</div>
+
+            <div class="methodology-note">
+                We chose to work with the composite dataset, where data on the same exoplanet from multiple papers is combined.
             </div>
-        </div>
+        </section>
 
-        <div class="container" style="margin-top: 40px;">
-            <h2>The "average" exoplanet system vs. ours</h2>
-            <p>Is our Solar System the norm? Not according to the data we have so far. Detection biases mean we mostly find planets extremely close to their host stars. Below is a composite "average" system (based on median distances and sizes in multi-planet systems) compared to our own Solar System.</p>
-            <p><em>Note: The distance from the star (horizontal axis) is on a logarithmic scale to fit both close-in exoplanets and distant gas giants.</em></p>
+        <section class="main-container">
+            <h2>Navigate the cosmos</h2>
+            <p class="section-desc">The visualisations for our project are divided into two distinct parts.</p>
             
-            <div id="average-system-container" style="position: relative; margin-top: 30px;"></div>
-        </div>
+            <div class="cards-grid two-cols">
+                <a href="explore.html" class="interactive-card">
+                    <h3>Explore dataset</h3>
+                    <p>Dive deep into the dataset and discover other worlds outside our Solar System.</p>
+                    <span class="card-link">Start exploring &rarr;</span>
+                </a>
+                <a href="story.html" class="interactive-card">
+                    <h3>Are we unique?</h3>
+                    <p>Is our Solar System an anomaly, or are we just blind to systems like ours?</p>
+                    <span class="card-link">Read the story &rarr;</span>
+                </a>
+            </div>
+        </section>
 
-        <div class="container" style="margin-top: 40px;">
-            <h2>Mass vs. orbital distance</h2>
-            <p>This plot reveals detection biases. Notice how different methods cluster in specific regions. Both axes use a logarithmic scale due to the extreme ranges.</p>
+        <section class="main-container", style="margin-bottom: -2rem;">
+            <h2>Discovery methods</h2>
+            <p class="section-desc">Planets are incredibly faint compared to their host stars. To find them, astronomers rely on ingenious indirect methods, each with its own strengths and limitations. As always, <a href="https://en.wikipedia.org/wiki/Methods_of_detecting_exoplanets" target="_blank" rel="noopener noreferrer">Wikipedia</a> is a good starting place for more information.</p>
             
-            <div id="scatter-plot-container"></div>
-        </div>
-
-        <div class="container" style="margin-top: 40px;">
-            <h2>Where are they found?</h2>
-            <p>A look at the facilities that have confirmed exoplanets. Space-based telescopes are shown above, while ground-based observatories are mapped to their physical locations on Earth. The size of the icon represents the total number of discoveries.</p>
-            
-            <div id="observatory-map-container" style="position: relative; overflow: hidden;"></div>
-        </div>
-
-        <div class="container" style="margin-top: 40px;">
-            <h2>Probability density function of the log orbital periods</h2>
-            <p>The labels of the x-axis are in days (and not log days) for easier interpretation.</p>
-            
-            <div id="density-plot-container"></div>
-        </div>
-
-        <div class="container" style="margin-top: 40px;">
-            <h2>Exoplanets in the sky</h2>
-            <p>
-                Explore the sky and discover where exoplanets are located across the celestial sphere.
-                Zoom in with the mouse wheel, then click and drag to navigate.
-                Hover over any point to reveal detailed information.
-            </p>
-
-            <div id="sky-map-container"></div>
-        </div>
-
-        <div class="container" style="margin-top: 40px;">
-            <h2>Measurement precision across discovery methods</h2>
-            <p>
-                This plot compares measurement precision across discovery methods.
-                Higher values indicate more precise measurements.
-                Switch between quantities to compare precision.
-            </p>
-
-            <div class="plot-controls">
-                <div class="segmented-control" id="precision-toggle">
-                    <button data-metric="orbper" class="active">Orbital Period</button>
-                    <button data-metric="orbsmax">Orbital Distance</button>
-                    <button data-metric="bmasse">Planet Mass</button>
+            <div class="cards-grid methods-grid">
+                <div class="method-card transit">
+                    <h3>Transit</h3>
+                    <p>Observing a star's slight dip in brightness as a planet passes directly in front of it.</p>
+                </div>
+                <div class="method-card radial">
+                    <h3>Radial velocity</h3>
+                    <p>Measuring the subtle "wobble" of a star caused by the gravitational pull of an orbiting planet.</p>
+                </div>
+                <div class="method-card microlensing">
+                    <h3>Microlensing</h3>
+                    <p>Using the gravity of a planetary system to bend and magnify the light of a distant background star.</p>
+                </div>
+                <div class="method-card imaging">
+                    <h3>Direct imaging</h3>
+                    <p>Taking an actual picture of the planet by blocking out the overwhelming glare of its host star.</p>
+                </div>
+                <div class="method-card other">
+                    <h3>Other methods</h3>
+                    <p>Includes rarer techniques like astrometry (measuring physical star movement), pulsar timing, and eclipse timing variations.</p>
                 </div>
             </div>
-            <div id="precision-plot-container"></div>
-        </div>
-
+        </section>
     </main>
 
-    <footer>
-
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p><strong>Exoplanets.</strong></p>
+            <p>Authors: Maxime Deryck, Robin Mattheeuws &amp; Niels Struye</p>
+        </div>
     </footer>
 
     <script src="js/main.js"></script>
-    <script src="js/detected_per_method_years.js"></script>
-    <script src="js/system_visualisation.js"></script>
-    <script src="js/mass_vs_distance.js"></script>
-    <script src="js/observatory_map.js"></script>
-    <script src="js/orbital_density.js"></script>
-    <script src="js/average_system_comparison.js"></script>
-    <script src="js/sky_map.js"></script>
-    <script src="js/measurement_precision.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const speed = 100; 
 
+            const animateCounters = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        
+                        const updateCount = () => {
+                            const target = +counter.getAttribute('data-target');
+                            let currentRaw = +(counter.getAttribute('data-current') || 0);
+                            
+                            const inc = target / speed;
+
+                            if (currentRaw < target) {
+                                currentRaw = Math.ceil(currentRaw + inc);
+                                counter.setAttribute('data-current', currentRaw);
+                                
+                                counter.innerText = window.formatExoNumber(currentRaw);
+                                setTimeout(updateCount, 20);
+                            } else {
+                                counter.innerText = window.formatExoNumber(target);
+                            }
+                        };
+                        updateCount();
+                        observer.unobserve(counter);
+                    }
+                });
+            };
+
+            const counterObserver = new IntersectionObserver(animateCounters, { threshold: 0.75 });
+
+            async function loadAndAnimateMetrics() {
+                const planetCounter = document.getElementById('planet-counter');
+                const systemCounter = document.getElementById('system-counter');
+                
+                if (!planetCounter || !systemCounter) return;
+
+                try {
+                    const data = await loadGlobalData();
+                    
+                    if (data && data.length > 0) {
+                        const dateDisplay = document.getElementById('dataset-date-display');
+                        if (dateDisplay && data.datasetDate) {
+                            dateDisplay.innerText = `* As of ${data.datasetDate}`;
+                        }
+
+                        const totalPlanets = data.length;
+                        const totalSystems = new Set(data.map(d => d.hostname)).size; 
+                        
+                        planetCounter.setAttribute('data-target', totalPlanets);
+                        systemCounter.setAttribute('data-target', totalSystems);
+                        
+                        planetCounter.innerText = "0";
+                        systemCounter.innerText = "0";
+
+                        counterObserver.observe(planetCounter);
+                        counterObserver.observe(systemCounter);
+                    }
+                    
+                } catch (error) {
+                    console.error("Failed to load metrics:", error);
+                    planetCounter.innerText = "Err";
+                    systemCounter.innerText = "Err";
+                }
+            }
+
+            loadAndAnimateMetrics();
+        });
+    </script>
 </body>
 </html>
