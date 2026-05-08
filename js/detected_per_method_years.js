@@ -145,7 +145,7 @@ function buildInteractiveChart() {
         yBar.domain(displayData.map(d => d.method));
 
         xAxisGroup.transition().duration(500)
-            .call(d3.axisBottom(xBar).ticks(8))
+            .call(d3.axisBottom(xBar).ticks(8).tickFormat(d => window.formatExoNumber(d, 0)))
             .attr("font-family", "var(--font-body)")
             .attr("color", "var(--text-muted)");
             

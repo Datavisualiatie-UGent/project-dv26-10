@@ -220,7 +220,7 @@ function drawVisualisation(systems, planets) {
         .style("stroke-width", 1);
 
     // Clean x-axis
-    const logFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
+    const logFormat = d => d >= 1000 ? window.formatExoNumber(d, 0) : d;
     const xTicks = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
     
     const xAxis = d3.axisBottom(xScale)

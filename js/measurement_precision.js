@@ -167,7 +167,7 @@ async function buildMeasurementPrecisionPlot() {
 
         const t = svg.transition().duration(1000).ease(d3.easeCubicInOut);
 
-        const logFormat = d => Number(d).toLocaleString("en-GB");
+        const logFormat = d => d >= 1000 ? window.formatExoNumber(d, 0) : d;
 
         gridGroup.transition(t)
             .call(d3.axisLeft(y).tickValues(yTicks).tickSize(-innerWidth).tickFormat(""));

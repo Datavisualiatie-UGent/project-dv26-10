@@ -65,7 +65,7 @@ async function buildHZPlot() {
         .call(d3.axisBottom(x).ticks(5, ".2f"));
 
     const yAxis = g.append("g")
-        .call(d3.axisLeft(y).ticks(5));
+        .call(d3.axisLeft(y).ticks(5).tickFormat(d => window.formatExoNumber(d, 0)));
 
     [xAxis, yAxis].forEach(axis => {
         axis.selectAll("text")

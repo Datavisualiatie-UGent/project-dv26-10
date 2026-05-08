@@ -169,7 +169,7 @@ async function buildScatterPlot() {
     });
 
     // Clean axes
-    const logFormat = d => Number(d).toLocaleString("en-GB", { maximumFractionDigits: 4 });
+    const logFormat = d => d >= 1000 ? window.formatExoNumber(d, 0) : d;
 
     const gx = svg.append("g")
         .attr("transform", `translate(0, ${height})`)
