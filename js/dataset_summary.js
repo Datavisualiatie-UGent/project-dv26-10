@@ -2,37 +2,13 @@ async function buildDatasetSummary() {
     const rawData = window.globalExoplanetData;
     if (!rawData || rawData.length === 0) return;
 
-    // Helper to safely extract clean numbers
-    const getValues = (key) => rawData
-        .map(d => parseFloat(d[key]))
-        .filter(v => !isNaN(v));
-
-    // Calculate stats for a given array
-    const calcStats = (arr) => {
-        if (arr.length === 0) return { min: 0, max: 0, median: 0 };
-        arr.sort(d3.ascending);
-        return {
-            min: arr[0],
-            max: arr[arr.length - 1],
-            median: d3.median(arr)
-        };
-    };
-
-    // Prepare data dictionaries
-    const stats = {
-        pl_orbper: calcStats(getValues('pl_orbper')),
-        pl_orbsmax: calcStats(getValues('pl_orbsmax')),
-        pl_rade: calcStats(getValues('pl_rade')),
-        pl_radj: calcStats(getValues('pl_radj')),
-        pl_bmasse: calcStats(getValues('pl_bmasse')),
-        pl_bmassj: calcStats(getValues('pl_bmassj')),
-        pl_orbeccen: calcStats(getValues('pl_orbeccen')),
-        st_teff: calcStats(getValues('st_teff')),
-        st_mass: calcStats(getValues('st_mass')),
-        st_rad: calcStats(getValues('st_rad')),
-        sy_dist: calcStats(getValues('sy_dist')),
-        sy_gaiamag: calcStats(getValues('sy_gaiamag'))
-    };
+    let stats;
+    try {
+        stats = await d3.json("assets/summary_stats.json");
+    } catch (error) {
+        console.error("Error loading summary stats:", error);
+        return;
+    }
 
     const fInt = (val) => window.formatExoNumber(val, 0);
     const fDec = (val) => window.formatExoNumber(val, 2);

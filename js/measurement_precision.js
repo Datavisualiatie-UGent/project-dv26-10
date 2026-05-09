@@ -5,62 +5,19 @@ async function buildMeasurementPrecisionPlot() {
 
     const mainMethods = ["Transit", "Radial velocity", "Microlensing", "Imaging"];
 
+    let precisionData;
+    try {
+        precisionData = await d3.json("assets/precision_data.json");
+    } catch (error) {
+        console.error("Error loading precision data:", error);
+        return;
+    }
+
     const metricOptions = {
         orbper: { valueKey: "pl_orbper", err1Key: "pl_orbpererr1", err2Key: "pl_orbpererr2", title: "Orbital Period" },
         orbsmax: { valueKey: "pl_orbsmax", err1Key: "pl_orbsmaxerr1", err2Key: "pl_orbsmaxerr2", title: "Orbital Distance" },
         bmasse: { valueKey: "pl_bmasse", err1Key: "pl_bmasseerr1", err2Key: "pl_bmasseerr2", title: "Planet Mass" }
     };
-
-    // Data preparation
-    function computeBoxStats(values) {
-        const sorted = values.slice().sort(d3.ascending);
-        return {
-            q1: d3.quantileSorted(sorted, 0.25),
-            median: d3.quantileSorted(sorted, 0.5),
-            q3: d3.quantileSorted(sorted, 0.75),
-            min: d3.quantileSorted(sorted, 0.05), // 5th percentile
-            max: d3.quantileSorted(sorted, 0.95)  // 95th percentile
-        };
-    }
-
-    const parseNumber = value => {
-        if (value == null || (typeof value === "string" && value.trim() === "")) return null;
-        const num = Number(value);
-        return Number.isFinite(num) ? num : null;
-    };
-
-    function prepareData(config) {
-        const data = rawData.map(d => {
-            let m = d.discoverymethod;
-            if (m === "Radial Velocity") m = "Radial velocity";
-            if (!m || !mainMethods.includes(m)) return null;
-
-            const value = parseNumber(d[config.valueKey]);
-            const err1 = parseNumber(d[config.err1Key]);
-            const err2 = parseNumber(d[config.err2Key]);
-
-            if (value == null || value <= 0 || err1 == null || err2 == null) return null;
-
-            const absErr = (Math.abs(err1) + Math.abs(err2)) / 2;
-            if (!Number.isFinite(absErr) || absErr <= 0) return null;
-
-            const relErr = absErr / value;
-            const precision = 1 / relErr;
-
-            if (!Number.isFinite(precision) || precision <= 0) return null;
-
-            return { method: m, precision };
-        }).filter(Boolean);
-
-        const grouped = d3.group(data, d => d.method);
-
-        return mainMethods
-            .filter(method => grouped.has(method) && grouped.get(method).length > 0)
-            .map(method => {
-                const values = grouped.get(method).map(d => d.precision);
-                return { method, values, ...computeBoxStats(values) };
-            });
-    }
 
     const colorScale = (method) => {
         if (method === "Transit") return "var(--color-transit)";
@@ -156,8 +113,7 @@ async function buildMeasurementPrecisionPlot() {
 
     // Dynamic rendering for change between views
     function render(metricKey) {
-        const config = metricOptions[metricKey];
-        const boxData = prepareData(config);
+        const boxData = precisionData[metricKey];
         if (!boxData || boxData.length === 0) return;
 
         // Calculate range
@@ -257,7 +213,7 @@ async function buildMeasurementPrecisionPlot() {
                         <tr><td style="padding-bottom: 4px; color: var(--text-light);">95th pctl:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${window.formatExoNumber(d.max, 1)}</td></tr>
                         <tr><td style="padding-bottom: 4px; color: var(--text-light);">Median:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px; color: ${colorScale(d.method)};">${window.formatExoNumber(d.median, 1)}</td></tr>
                         <tr><td style="padding-bottom: 4px; color: var(--text-light);">5th pctl:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${window.formatExoNumber(d.min, 1)}</td></tr>
-                        <tr style="border-top: 1px solid rgba(255,255,255,0.2);"><td style="padding-top: 6px; color: var(--text-light);">Sample size:</td><td style="text-align: right; padding-top: 6px;">${window.formatExoNumber(d.values.length)}</td></tr>
+                        <tr style="border-top: 1px solid rgba(255,255,255,0.2);"><td style="padding-top: 6px; color: var(--text-light);">Sample size:</td><td style="text-align: right; padding-top: 6px;">${window.formatExoNumber(d.count)}</td></tr>
                     </table>
                 `);
             })

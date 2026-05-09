@@ -35,29 +35,15 @@ async function loadGlobalData() {
     }
 
     try {
-        const text = await d3.text("assets/exoplanet_dataset.csv");
-        const lines = text.split('\n');
+        const [csvData, metadata] = await Promise.all([
+            d3.csv("assets/reduced_dataset.csv"),
+            d3.json("assets/metadata.json")
+        ]);
         
-        let formattedDate = "Unknown date";
-        if (lines[1] && lines[1].startsWith('#')) {
-            const rawDateString = lines[1].replace('#', '').trim();
-            const parsedDate = new Date(rawDateString);
-            
-            if (!isNaN(parsedDate)) {
-                formattedDate = new Intl.DateTimeFormat('en-GB', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                }).format(parsedDate);
-            } else {
-                formattedDate = rawDateString;
-            }
-        }
-        
-        const cleanedText = lines.filter(line => !line.startsWith('#')).join('\n');
-        
-        window.globalExoplanetData = d3.csvParse(cleanedText);
-        window.globalExoplanetData.datasetDate = formattedDate;
+        window.globalExoplanetData = csvData;
+        window.globalExoplanetData.datasetDate = metadata.dataset_date;
+        window.globalExoplanetData.totalPlanets = metadata.total_planets;
+        window.globalExoplanetData.totalSystems = metadata.total_systems;
         
         document.dispatchEvent(new Event('dataLoaded'));
         return window.globalExoplanetData;
