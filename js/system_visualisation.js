@@ -325,7 +325,7 @@ function drawVisualisation(systems, planets) {
 
     // Clean x-axis
     const logFormat = d => d >= 1000 ? window.formatExoNumber(d, 0) : d;
-    const xTicks = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
+    const xTicks = [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000, 100000];
     
     const xAxis = d3.axisBottom(xScale)
         .tickValues(xTicks)
