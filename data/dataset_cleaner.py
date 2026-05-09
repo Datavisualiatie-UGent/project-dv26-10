@@ -23,9 +23,6 @@ def process_exoplanet_data(input_csv="dataset.csv"):
 
     df = pd.read_csv(input_csv, comment='#')
     
-    # No double capitalisation
-    df['discoverymethod'] = df['discoverymethod'].replace({'Radial Velocity': 'Radial velocity'})
-    
     # Export metadata
     metadata = {
         "dataset_date": dataset_date,
@@ -64,7 +61,7 @@ def process_exoplanet_data(input_csv="dataset.csv"):
         'orbsmax': {'val': 'pl_orbsmax', 'err1': 'pl_orbsmaxerr1', 'err2': 'pl_orbsmaxerr2'},
         'bmasse': {'val': 'pl_bmasse', 'err1': 'pl_bmasseerr1', 'err2': 'pl_bmasseerr2'}
     }
-    main_methods = ["Transit", "Radial velocity", "Microlensing", "Imaging"]
+    main_methods = ["Transit", "Radial Velocity", "Microlensing", "Imaging"]
     precision_data = {}
     
     for metric_key, cols in metrics.items():

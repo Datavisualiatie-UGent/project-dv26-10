@@ -3,7 +3,7 @@ async function buildMeasurementPrecisionPlot() {
     const rawData = window.globalExoplanetData;
     if (!rawData || rawData.length === 0) return;
 
-    const mainMethods = ["Transit", "Radial velocity", "Microlensing", "Imaging"];
+    const mainMethods = ["Transit", "Radial Velocity", "Microlensing", "Imaging"];
 
     let precisionData;
     try {
@@ -21,7 +21,7 @@ async function buildMeasurementPrecisionPlot() {
 
     const colorScale = (method) => {
         if (method === "Transit") return "var(--color-transit)";
-        if (method === "Radial velocity") return "var(--color-radial)";
+        if (method === "Radial Velocity") return "var(--color-radial)";
         if (method === "Microlensing") return "var(--color-microlensing)";
         if (method === "Imaging") return "var(--color-imaging)";
         return "var(--color-other)";
@@ -63,7 +63,7 @@ async function buildMeasurementPrecisionPlot() {
     const gx = g.append("g").attr("transform", `translate(0,${innerHeight})`);
     const gy = g.append("g");
 
-    gx.call(d3.axisBottom(x).tickSizeOuter(0));
+    gx.call(d3.axisBottom(x).tickFormat(d => d === "Radial Velocity" ? "Radial velocity" : d).tickSizeOuter(0));
     gx.select(".domain").attr("stroke", "var(--border-light)");
     gx.selectAll(".tick line").attr("opacity", 0);
     gx.selectAll("text")
@@ -208,7 +208,7 @@ async function buildMeasurementPrecisionPlot() {
             .on("mouseover", function(event, d) {
                 d3.select(this).style("filter", "brightness(1.2)");
                 tooltip.style("transition", "none").style("opacity", 1).html(`
-                    <div class="tt-header">${d.method}</div>
+                    <div class="tt-header">${d.method === "Radial Velocity" ? "Radial velocity" : d.method}</div>
                     <table style="width: 100%; min-width: 160px; font-size: 0.8rem; margin-top: 8px; border-collapse: collapse;">
                         <tr><td style="padding-bottom: 4px; color: var(--text-light);">95th pctl:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${window.formatExoNumber(d.max, 1)}</td></tr>
                         <tr><td style="padding-bottom: 4px; color: var(--text-light);">Median:</td><td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px; color: ${colorScale(d.method)};">${window.formatExoNumber(d.median, 1)}</td></tr>
