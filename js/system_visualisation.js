@@ -27,12 +27,20 @@ async function buildSystemVisualisation() {
             planetCount: +d.sy_pnum
         }));
 
+    window.sizeScale = d3.scaleSqrt()
+        .domain(d3.extent(data, d => +d.radius))
+        .range([3, 14]);
+
     const groupPerHost = d3.group(data, d => d.hostname);
     allSystems = Array.from(groupPerHost, ([hostname, planets]) => ({
         hostname,
         planetCount: planets[0].planetCount,
         planets
-    })).sort((a, b) => b.planetCount - a.planetCount || a.hostname.localeCompare(b.hostname)); 
+    })).sort((a, b) => {
+        const minA = d3.min(a.planets, p => p.distance);
+        const minB = d3.min(b.planets, p => p.distance);
+        return minA - minB;
+    });
 
     // Initiate filters
     const counts = [...new Set(allSystems.map(s => s.planetCount))]
@@ -46,7 +54,7 @@ async function buildSystemVisualisation() {
         .attr("class", "method-btn other")
         .classed("active", d => d >= 4) // Default to 4+ planets
         .attr("data-count", d => d)
-        .text(d => `${d} Planets`)
+        .text(d => d === 1 ? `${d} Planet` : `${d} Planets`)
         .on("click", function(event) {
             event.stopPropagation(); // FIX: Prevent Exolab.js from hijacking!
             const btn = d3.select(this);
@@ -69,10 +77,65 @@ async function buildSystemVisualisation() {
     // First render
     renderSystems();
     drawSolarSystemBaseline();
+    drawSizeReference();
     
     window.addEventListener("resize", () => {
         renderSystems();
         drawSolarSystemBaseline();
+        drawSizeReference();
+    });
+}
+
+function drawSizeReference() {
+    const container = document.getElementById("size-reference-container");
+    const width = container.clientWidth;
+
+    d3.select("#size-reference-container").selectAll("svg").remove();
+
+    const svg = d3.select("#size-reference-container")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", 60);
+
+    const refRadii = [0.1, 0.5, 0.75, 1, 1.25, 1.5, 3, 5, 7];
+
+    const g = svg.append("g").attr("transform", `translate(0, 30)`);
+
+    // Calculate total width of all circles + spacing to center them
+    let totalWidth = 0;
+    refRadii.forEach(r => { totalWidth += sizeScale(r) * 2 + 20; });
+    const labelWidth = 130;
+    const startX = (width - totalWidth - labelWidth) / 2;
+
+    g.append("text")
+        .attr("x", startX)
+        .attr("y", 4)
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "11px")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-muted)")
+        .text("References sizes (Rⱼ):");
+
+    let xCursor = startX + labelWidth;
+    refRadii.forEach(r => {
+        const circleR = sizeScale(r);
+        g.append("circle")
+            .attr("cx", xCursor + circleR)
+            .attr("cy", 0)
+            .attr("r", circleR)
+            .style("fill", "var(--accent-glow)")
+            .style("opacity", 0.6);
+
+        g.append("text")
+            .attr("x", xCursor + circleR)
+            .attr("y", circleR + 12)
+            .attr("text-anchor", "middle")
+            .style("font-family", "var(--font-body)")
+            .style("font-size", "10px")
+            .style("fill", "var(--text-muted)")
+            .text(r);
+
+        xCursor += circleR * 2 + 20;
     });
 }
 
@@ -138,16 +201,12 @@ function drawVisualisation(systems, planets) {
     const xScale = d3.scaleLog()
         .domain([d3.min(allDistances), d3.max(allDistances)])
         .nice()
-        .range([35, innerWidth]); // Do not overlap star
+        .range([35, innerWidth]); 
 
     const yScale = d3.scaleBand()
         .domain(systems.map(d => d.hostname))
         .range([0, innerHeight])
         .padding(0.3);
-
-    const sizeScale = d3.scaleSqrt()
-        .domain(d3.extent(planets, d => d.radius))
-        .range([3, 14]);
 
     const colorScale = (method) => {
         if (method === "Transit") return "var(--color-transit)";
@@ -155,6 +214,20 @@ function drawVisualisation(systems, planets) {
         if (method === "Microlensing") return "var(--color-microlensing)";
         if (method === "Imaging") return "var(--color-imaging)";
         return "var(--color-other)";
+    };
+
+    const tooltip = d3.select("body")
+        .selectAll(".d3-tooltip-system")
+        .data([null])
+        .join("div")
+        .attr("class", "exo-tooltip d3-tooltip-system")
+        .style("opacity", 0);
+
+    const formatValue = x => {
+        if (x == null || !Number.isFinite(x)) return "Unknown";
+        if (x >= 1000) return d3.format(",.0f")(x);
+        if (x >= 10) return d3.format(",.1f")(x);
+        return d3.format(".2f")(x);
     };
 
     // Host star header
@@ -217,7 +290,38 @@ function drawVisualisation(systems, planets) {
         .style("fill", d => colorScale(d.method))
         .style("opacity", 0.85)
         .style("stroke", "var(--bg-card)")
-        .style("stroke-width", 1);
+        .style("stroke-width", 1)
+        .on("mouseenter", function(event, d) {
+            tooltip
+                .style("opacity", 1)
+                .html(`
+                    <div class="tt-header">${d.name}</div>
+                    <table style="width: 100%; font-size: 0.8rem; margin-top: 8px; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding-bottom: 4px; padding-right: 16px; color: var(--text-light);">Method:</td>
+                            <td style="text-align: right; font-weight: bold; padding-bottom: 4px; color: ${colorScale(d.method)};">${d.method}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-bottom: 4px; padding-right: 16px; color: var(--text-light);">Distance to host:</td>
+                            <td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${formatValue(d.distance)} AU</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-bottom: 4px; padding-right: 16px; color: var(--text-light);">Radius:</td>
+                            <td style="text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; padding-bottom: 4px;">${formatValue(d.radius)} R<sub>J</sub></td>
+                        </tr>
+                    </table>
+                `)
+                .style("left", `${event.pageX + 14}px`)
+                .style("top", `${event.pageY + 14}px`);
+        })
+        .on("mousemove", function(event) {
+            tooltip
+                .style("left", `${event.pageX + 14}px`)
+                .style("top", `${event.pageY + 14}px`);
+        })
+        .on("mouseleave", function() {
+            tooltip.style("opacity", 0);
+        });
 
     // Clean x-axis
     const logFormat = d => d >= 1000 ? window.formatExoNumber(d, 0) : d;

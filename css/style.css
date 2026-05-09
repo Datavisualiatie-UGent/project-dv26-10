@@ -312,7 +312,7 @@ main {
     opacity: 0;
     transition: opacity 0.2s;
     z-index: 9999;
-    min-width: 150px;
+    min-width: 150px; 
 }
 .exo-tooltip .tt-header {
     font-family: var(--font-heading);
