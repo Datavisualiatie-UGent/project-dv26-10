@@ -180,7 +180,8 @@
                     <button class="inline-action" data-start="2022" data-end="2026">Today</button>, using many more observatories, both ground-based as well as in space, we are finding strange worlds with a variety of techniques.
                 </p>
                 <p>
-                    Drag the handles on the timeline below, or click the highlighted eras above, to explore <button class="inline-action" data-start="1992" data-end="2026">the entire history</button> of exoplanet discovery. Click the "Other" bar to zoom in on the rarest techniques!
+                    Drag the handles on the timeline below, or click the highlighted eras above, to explore <button class="inline-action" data-start="1992" data-end="2026">the entire history</button> of exoplanet discovery.
+                    Click the <button class="inline-action" data-action="show-other">“Other”</button> bar to zoom in on the rarest techniques!
                 </p>
             </div>
             
@@ -220,29 +221,30 @@
         </section>
 
         <!-- Sky map -->
-        <section class="container" style="margin-top: 2rem; margin-bottom: 2rem;">
+        <section class="container" style="margin-top: 2rem;">
             
             <div class="explorable-text">
                 <p>
-                    With so many advanced observatories on Earth and in space, you might assume we have mapped the entire cosmos. The map below projects every confirmed exoplanet onto the celestial sphere using Right Ascension (horizontal) and Declination (vertical). You can click and drag to pan, or scroll to zoom.
+                    With so many advanced observatories on Earth and in space, you might assume we have mapped the entire cosmos. The map below projects every confirmed exoplanet onto the celestial sphere using Right Ascension (horizontal) and Declination (vertical). You can explore the sky map by scrolling to zoom and dragging to pan, hover over planets to inspect their coordinates and distance to us, and hover over the legend to isolate discovery methods.
                 </p>
                 <p>
                     While discoveries appear scattered across the map, one feature stands out immediately: the massive, incredibly dense cluster on the top-right. That is the <button class="inline-action sky-action" data-target="kepler">Kepler Field of View</button>. The Kepler Space Telescope didn't scan the whole night sky; it stared continuously at one single patch of the Milky Way for four years. Also on the right, but below the celestial equator, you'll spot a concentrated patch of green microlensing discoveries. Because a microlensing alignment is rare, astronomers have to look at hundreds of millions of stars simultaneously to catch it happening. The <button class="inline-action sky-action" data-target="bulge">galactic bulge</button> is the only place in the sky with enough background stars tightly packed together to make this method reliably successful.
                 </p>
-                <p>
-                    The sheer volume of planets found in these small windows is profound. It tells us that our current map is not a complete picture, but a tiny sample. It suggests that billions of worlds remain hidden in the vast, unobserved dark gaps of this map, just waiting to be found.
-                </p>
-                <p style="text-align: right; margin-top: -1rem; margin-bottom: -1rem;">
+                <p style="text-align: right; margin-top: -1rem; margin-bottom: -3rem;">
                     <button class="inline-action sky-action" data-target="reset" style="border-bottom: none; font-size: 0.85rem; color: var(--text-muted);">⟲ Reset map view</button>
                 </p>
             </div>
 
-            <div id="sky-map-container" style="width: 100%; position: relative; background: var(--space-top); border: 1px solid var(--border-light); border-radius: 12px; box-shadow: var(--shadow-card); overflow: hidden;"></div>
-
+            <div id="sky-map-container" style="width: 100%; position: relative; margin-bottom: 3rem;"></div>
+            <div class="explorable-text">
+                <p>
+                    The sheer volume of planets discovered within the Kepler Field of View and the galactic bulge region is profound. It tells us that our current map is not a complete picture, but a tiny sample. It suggests that billions of worlds remain hidden in the vast, unobserved dark gaps of this map, just waiting to be found.
+                </p>
+            </div>
         </section>
 
         <!-- Planetary systems -->
-        <section class="container" style="margin-top: -1rem;">
+        <section class="container" style="margin-top: -2.5rem;">
             
             <div class="explorable-text">
                 <h2 style="margin-bottom: 1.5rem;">Planetary systems visualised</h2>

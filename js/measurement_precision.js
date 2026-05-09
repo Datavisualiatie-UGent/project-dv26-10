@@ -111,25 +111,33 @@ async function buildMeasurementPrecisionPlot() {
     gx.selectAll(".tick line").attr("opacity", 0);
     gx.selectAll("text")
         .style("font-family", "var(--font-heading)")
-        .style("font-size", "12px")
+        .style("font-size", "14px")
         .style("font-weight", "600")
         .style("fill", "var(--text-dark)")
         .attr("dy", "1em");
 
-    g.append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("x", -innerHeight / 2)
-        .attr("y", -65)
-        .attr("text-anchor", "middle")
-        .style("font-family", "var(--font-heading)")
-        .style("font-size", "12px")
-        .style("font-weight", "700")
-        .style("text-transform", "uppercase")
-        .style("letter-spacing", "1px")
-        .style("fill", "var(--text-muted)")
-        .text(`Precision (1 / Rel. Error)`);
+    const yAxisLabel = g.append("g")
+        .attr("transform", `translate(-70, ${innerHeight / 2}) rotate(-90)`)
+        .attr("text-anchor", "middle");
 
-    /// Highlight logic for microlensing
+    yAxisLabel.append("text")
+        .style("font-family", "var(--font-heading)")
+        .style("font-size", "14px")
+        .style("font-weight", "700")
+        .style("fill", "var(--text-muted)")
+        .text("Measurement precision");
+
+    yAxisLabel.append("text")
+        .attr("y", 16)
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "12px")
+        .style("font-weight", "500")
+        .style("letter-spacing", "0.5px")
+        .style("fill", "var(--text-muted)")
+        .style("opacity", 0.75)
+        .text("Higher is better");
+
+    // Highlight logic for microlensing
     const highlightMethod = (targetMethod) => {
         boxContainer.selectAll(".box-group").style("opacity", d => d.method === targetMethod ? 1 : 0.1);
         d3.selectAll(".highlight-action").style("opacity", function() {
@@ -197,6 +205,18 @@ async function buildMeasurementPrecisionPlot() {
             .attr("y1", innerHeight).attr("y2", innerHeight) // Start at bottom
             .attr("stroke", "var(--text-muted)").attr("stroke-width", 1.5).style("opacity", 0.6);
 
+        boxesEnter.append("line").attr("class", "whisker-cap-min")
+            .attr("x1", x.bandwidth() * 0.25).attr("x2", x.bandwidth() * 0.75)
+            .attr("y1", innerHeight).attr("y2", innerHeight)
+            .attr("stroke", "var(--text-muted)").attr("stroke-width", 1.5)
+            .attr("stroke-linecap", "round").style("opacity", 0.6);
+
+        boxesEnter.append("line").attr("class", "whisker-cap-max")
+            .attr("x1", x.bandwidth() * 0.25).attr("x2", x.bandwidth() * 0.75)
+            .attr("y1", innerHeight).attr("y2", innerHeight)
+            .attr("stroke", "var(--text-muted)").attr("stroke-width", 1.5)
+            .attr("stroke-linecap", "round").style("opacity", 0.6);
+
         boxesEnter.append("rect").attr("class", "iqr-box")
             .attr("x", 0).attr("y", innerHeight).attr("width", x.bandwidth()).attr("height", 0) // Start flat
             .attr("rx", 4).attr("fill", d => colorScale(d.method)).attr("opacity", 0.8);
@@ -210,6 +230,14 @@ async function buildMeasurementPrecisionPlot() {
 
         boxesMerge.select(".whisker").transition(t)
             .attr("y1", d => y(d.min))
+            .attr("y2", d => y(d.max));
+
+        boxesMerge.select(".whisker-cap-min").transition(t)
+            .attr("y1", d => y(d.min))
+            .attr("y2", d => y(d.min));
+
+        boxesMerge.select(".whisker-cap-max").transition(t)
+            .attr("y1", d => y(d.max))
             .attr("y2", d => y(d.max));
 
         boxesMerge.select(".iqr-box").transition(t)

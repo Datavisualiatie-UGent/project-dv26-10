@@ -261,6 +261,15 @@ function buildInteractiveChart() {
     // Explorable text interactions
     d3.selectAll(".inline-action").on("click", function(event) {
         const btn = d3.select(this);
+
+        const action = btn.attr("data-action");
+        if (action === "show-other") {
+            isShowingOther = true;
+            d3.select("#back-btn").style("display", "inline-block");
+            updateBarChart();
+            return;
+        }
+
         const startYear = btn.attr("data-start");
         const endYear = btn.attr("data-end");
         
