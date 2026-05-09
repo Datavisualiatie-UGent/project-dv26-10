@@ -53,7 +53,7 @@ function initExolab() {
     });
 
     document.getElementById('search-btn').addEventListener('click', () => {
-        const activeMethods = Array.from(document.querySelectorAll('.method-btn.active')).map(btn => btn.dataset.method);
+        const activeMethods = Array.from(document.querySelectorAll('.exolab-controls .method-btn.active')).map(btn => btn.dataset.method);
         const getRange = (minId, maxId) => {
             const v1 = +document.getElementById(minId).value;
             const v2 = +document.getElementById(maxId).value;
