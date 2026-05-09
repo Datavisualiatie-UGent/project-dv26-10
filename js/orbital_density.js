@@ -26,7 +26,7 @@ async function buildDensityPlot() {
     
     const fullWidth = 1050;
     const fullHeight = 450;
-    const margin = { top: 40, right: 40, bottom: 60, left: 20 }; 
+    const margin = { top: 40, right: 40, bottom: 60, left: 65 }; 
     const width = fullWidth - margin.left - margin.right;
     const height = fullHeight - margin.top - margin.bottom;
 
@@ -150,6 +150,30 @@ async function buildDensityPlot() {
         .style("letter-spacing", "1px")
         .style("fill", "var(--text-muted)")
         .text("Orbital Period (days)");
+
+    const gy = svg.append("g")
+        .attr("transform", `translate(0, 0)`)
+        .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".2f")).tickSizeOuter(0));
+
+    gy.select(".domain").attr("stroke", "var(--border-light)");
+    gy.selectAll(".tick line").attr("stroke", "var(--border-light)");
+    gy.selectAll(".tick text")
+        .style("font-family", "var(--font-body)")
+        .style("font-variant-numeric", "tabular-nums")
+        .style("fill", "var(--text-muted)");
+
+    svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", `rotate(-90)`)
+        .attr("x", -(height / 2))
+        .attr("y", -45)
+        .style("font-family", "var(--font-heading)")
+        .style("font-size", "12px")
+        .style("font-weight", "700")
+        .style("text-transform", "uppercase")
+        .style("letter-spacing", "1px")
+        .style("fill", "var(--text-muted)")
+        .text("Density");
 
     // Reference planets
     const referencePlanets = [
