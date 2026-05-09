@@ -61,6 +61,18 @@
     box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
 }
 
+.method-action[data-method="Other"] {
+    color: var(--color-other);
+    border-bottom: 2px dotted var(--color-other);
+}
+
+.method-action[data-method="Other"]:hover {
+    background: var(--color-other);
+    color: white;
+    border-bottom-color: transparent;
+    box-shadow: 0 4px 10px rgba(100, 116, 139, 0.3);
+}
+
 /* --- EXOLAB --- */
 .exolab-layout {
     display: grid;
