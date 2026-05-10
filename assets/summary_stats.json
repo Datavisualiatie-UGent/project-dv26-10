@@ -7,7 +7,7 @@
     "pl_orbsmax": {
         "min": 0.0044,
         "max": 19000.0,
-        "median": 0.1022
+        "median": 0.10231
     },
     "pl_rade": {
         "min": 0.3098,
@@ -37,7 +37,7 @@
     "st_teff": {
         "min": 415.0,
         "max": 57000.0,
-        "median": 5542.0
+        "median": 5541.0
     },
     "st_mass": {
         "min": 0.0094,
@@ -52,11 +52,11 @@
     "sy_dist": {
         "min": 1.30119,
         "max": 8500.0,
-        "median": 366.3105
+        "median": 365.0
     },
     "sy_gaiamag": {
         "min": 2.36431,
         "max": 20.1861,
-        "median": 12.93695
+        "median": 12.9353
     }
 }
