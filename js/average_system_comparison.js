@@ -40,10 +40,20 @@ async function buildAverageSystemComparison() {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    let tooltip = d3.select("body").select(".exo-tooltip");
-    if (tooltip.empty()) {
-        tooltip = d3.select("body").append("div").attr("class", "exo-tooltip").style("pointer-events", "none");
-    }
+    const tooltip = d3.select("body")
+        .selectAll(".exo-tooltip")
+        .data([null])
+        .join("div")
+        .attr("class", "exo-tooltip")
+        .style("pointer-events", "none");
+    d3.select("#scroll-area").on("scroll.avgSystem", () => {
+        tooltip.style("opacity", 0);
+    });
+    d3.select("body").on("touchstart.avgSystem", (event) => {
+        if (!event.target.closest('.planet-node')) {
+            tooltip.style("opacity", 0);
+        }
+    });
 
     const xDist = d3.scaleLog().domain([0.01, 40]).range([0, width]);
     const rScale = d3.scaleSqrt().domain([0, 12]).range([2, 22]);

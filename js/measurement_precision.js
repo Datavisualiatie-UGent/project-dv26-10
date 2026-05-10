@@ -45,10 +45,20 @@ async function buildMeasurementPrecisionPlot() {
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    let tooltip = d3.select("body").select(".exo-tooltip");
-    if (tooltip.empty()) {
-        tooltip = d3.select("body").append("div").attr("class", "exo-tooltip").style("pointer-events", "none");
-    }
+    const tooltip = d3.select("body")
+        .selectAll(".exo-tooltip")
+        .data([null])
+        .join("div")
+        .attr("class", "exo-tooltip")
+        .style("pointer-events", "none");
+    d3.select("#scroll-area").on("scroll.precision", () => {
+        tooltip.style("opacity", 0);
+    });
+    d3.select("body").on("touchstart.precision", (event) => {
+        if (!event.target.closest('.iqr-box')) {
+            tooltip.style("opacity", 0);
+        }
+    });
 
     // Scales
     const x = d3.scaleBand()

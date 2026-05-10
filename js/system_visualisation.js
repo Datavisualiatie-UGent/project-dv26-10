@@ -222,11 +222,9 @@ function drawVisualisation(systems, planets) {
         .join("div")
         .attr("class", "exo-tooltip d3-tooltip-system")
         .style("opacity", 0);
-
-    d3.select("#scroll-area").on("scroll", () => {
+    d3.select("#scroll-area").on("scroll.system", () => {
         tooltip.style("opacity", 0);
     });
-
     d3.select("body").on("touchstart.systemtooltip", (event) => {
         if (!event.target.closest('.planet')) {
             tooltip.style("opacity", 0);

@@ -104,7 +104,20 @@ async function buildObservatoryMap() {
         .style("width", "100%")
         .style("height", "auto");
 
-    const tooltip = d3.select("body").append("div").attr("class", "exo-tooltip");
+    const tooltip = d3.select("body")
+        .selectAll(".exo-tooltip")
+        .data([null])
+        .join("div")
+        .attr("class", "exo-tooltip")
+        .style("pointer-events", "none");
+    d3.select("#scroll-area").on("scroll.observatory", () => {
+        tooltip.style("opacity", 0);
+    });
+    d3.select("body").on("touchstart.observatory", (event) => {
+        if (!event.target.closest('.map-node, path, .spider-container')) {
+            tooltip.style("opacity", 0);
+        }
+    });
 
     const sizeScale = d3.scaleSqrt()
         .domain([0, d3.max([...spaceFacilities, ...groupedGroundNodes], d => d.count || d.totalCount)])

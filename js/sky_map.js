@@ -255,6 +255,14 @@ async function buildSkyMap() {
         .join("div")
         .attr("class", "exo-tooltip d3-tooltip-sky")
         .style("opacity", 0);
+    d3.select("#scroll-area").on("scroll.sky", () => {
+        tooltip.style("opacity", 0);
+    });
+    d3.select("body").on("touchstart.sky", (event) => {
+        if (!event.target.closest('circle')) {
+            tooltip.style("opacity", 0);
+        }
+    });
 
     const formatCoordinate = value => {
         if (value == null || !Number.isFinite(value)) return "Unknown";

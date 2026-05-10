@@ -51,10 +51,20 @@ async function buildScatterPlot() {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    let tooltip = d3.select("body").select(".exo-tooltip");
-    if (tooltip.empty()) {
-        tooltip = d3.select("body").append("div").attr("class", "exo-tooltip").style("pointer-events", "none");
-    }
+    const tooltip = d3.select("body")
+        .selectAll(".exo-tooltip")
+        .data([null])
+        .join("div")
+        .attr("class", "exo-tooltip")
+        .style("pointer-events", "none");
+    d3.select("#scroll-area").on("scroll.massDist", () => {
+        tooltip.style("opacity", 0);
+    });
+    d3.select("body").on("touchstart.massDist", (event) => {
+        if (!event.target.closest('.data-dot')) {
+            tooltip.style("opacity", 0);
+        }
+    });
 
     // Scales
     const minDistance = d3.min(data, d => d.distance);
