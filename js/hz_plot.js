@@ -96,6 +96,38 @@ async function buildHZPlot() {
     earthGroup.append("circle").attr("cx", x(1)).attr("cy", y(5778)).attr("r", 5).attr("fill", "none").attr("stroke", "var(--text-dark)").attr("stroke-width", 2);
     earthGroup.append("text").attr("x", x(1) + 8).attr("y", y(5778) + 4).style("font-size", "12px").style("font-weight", "800").text("Earth");
 
+    // Legend
+    const legendWidth = 135;
+    const legendHeight = 36;
+    const legend = g.append("g")
+        .attr("transform", `translate(${width - legendWidth - 15}, ${height - legendHeight - 15})`); // Positioned in lower right
+
+    legend.append("rect")
+        .attr("x", 0).attr("y", 0)
+        .attr("width", legendWidth).attr("height", legendHeight)
+        .attr("fill", "rgba(255,255,255,0.8)")
+        .attr("stroke", "var(--border-light)")
+        .attr("rx", 8)
+        .style("backdrop-filter", "blur(4px)")
+        .style("box-shadow", "var(--shadow-card)");
+
+    legend.append("rect")
+        .attr("x", 12).attr("y", 12)
+        .attr("width", 12).attr("height", 12)
+        .attr("fill", "#10b981")
+        .attr("opacity", 0.3)
+        .attr("rx", 2);
+
+    legend.append("text")
+        .attr("x", 32)
+        .attr("y", 18)
+        .style("font-family", "var(--font-body)")
+        .style("font-size", "12px")
+        .style("font-weight", "600")
+        .style("fill", "var(--text-dark)")
+        .style("alignment-baseline", "middle")
+        .text("Habitable zone");
+
     // Explorable text interactions
     const highlight = (type) => {
         dots.transition().duration(300).style("opacity", d => {
