@@ -135,6 +135,7 @@
     width: 100%;
     top: 12px;
     -webkit-appearance: none;
+    appearance: none;
     background: none;
     pointer-events: none;
 }
@@ -151,6 +152,21 @@
     transition: transform 0.1s;
 }
 .dual-slider input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+.dual-slider input[type=range]::-moz-range-thumb {
+    height: 18px; 
+    width: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--accent-glow);
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+    box-sizing: border-box;
+}
+.dual-slider input[type=range]::-moz-range-thumb:hover {
     transform: scale(1.2);
 }
 
