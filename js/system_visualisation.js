@@ -223,6 +223,16 @@ function drawVisualisation(systems, planets) {
         .attr("class", "exo-tooltip d3-tooltip-system")
         .style("opacity", 0);
 
+    d3.select("#scroll-area").on("scroll", () => {
+        tooltip.style("opacity", 0);
+    });
+
+    d3.select("body").on("touchstart.systemtooltip", (event) => {
+        if (!event.target.closest('.planet')) {
+            tooltip.style("opacity", 0);
+        }
+    });
+
     const formatValue = x => {
         if (x == null || !Number.isFinite(x)) return "Unknown";
         if (x >= 1000) return d3.format(",.0f")(x);
