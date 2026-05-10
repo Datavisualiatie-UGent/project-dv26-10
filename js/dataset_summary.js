@@ -76,6 +76,24 @@ async function buildDatasetSummary() {
         const overlay = card.append("div").attr("class", "square-overlay");
         overlay.append("h4").html(b.title); 
         overlay.append("p").html(b.desc);
+
+        card.on("click", function(e) { // Mobile tap
+            if (e.target.closest('.mini-toggle')) return;
+
+            const isShowing = d3.select(this).classed("show-overlay");
+            d3.selectAll(".square-card").classed("show-overlay", false);
+            d3.select(this).classed("show-overlay", !isShowing);
+        });
+
+        card.on("mouseenter", function() {
+            d3.selectAll(".square-card").classed("show-overlay", false);
+        });
+    });
+
+    document.addEventListener("click", function(e) {
+        if (!e.target.closest('.square-card')) {
+            d3.selectAll(".square-card").classed("show-overlay", false);
+        }
     });
 
     // Fetch values
