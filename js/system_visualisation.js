@@ -92,50 +92,67 @@ function drawSizeReference() {
 
     d3.select("#size-reference-container").selectAll("svg").remove();
 
+    const refRadii = [0.1, 0.5, 0.75, 1, 1.25, 1.5, 3, 5, 7];
+    const labelWidth = 140; 
+    
+    let totalNeededWidth = labelWidth;
+    refRadii.forEach(r => { totalNeededWidth += sizeScale(r) * 2 + 20; });
+
+    let isMobile = totalNeededWidth > width;
+    let startX = isMobile ? 10 : (width - totalNeededWidth) / 2;
+    
+    let currentX = startX + labelWidth;
+    let currentY = 30;
+    const rowHeight = 45;
+
+    const positions = [];
+
+    // Calculate wrapping positions
+    refRadii.forEach(r => {
+        const circleR = sizeScale(r);
+        const itemWidth = circleR * 2 + 20;
+
+        if (currentX + itemWidth > width && currentX > startX) {
+            currentX = startX; 
+            currentY += rowHeight; 
+        }
+
+        positions.push({ r: r, circleR: circleR, cx: currentX + circleR, cy: currentY });
+        currentX += itemWidth;
+    });
+
+    const svgHeight = currentY + 30;
+
     const svg = d3.select("#size-reference-container")
         .append("svg")
         .attr("width", "100%")
-        .attr("height", 60);
+        .attr("height", svgHeight);
 
-    const refRadii = [0.1, 0.5, 0.75, 1, 1.25, 1.5, 3, 5, 7];
-
-    const g = svg.append("g").attr("transform", `translate(0, 30)`);
-
-    // Calculate total width of all circles + spacing to center them
-    let totalWidth = 0;
-    refRadii.forEach(r => { totalWidth += sizeScale(r) * 2 + 20; });
-    const labelWidth = 130;
-    const startX = (width - totalWidth - labelWidth) / 2;
-
-    g.append("text")
+    svg.append("text")
         .attr("x", startX)
-        .attr("y", 4)
+        .attr("y", 34) 
         .style("font-family", "var(--font-body)")
         .style("font-size", "11px")
         .style("font-weight", "600")
         .style("fill", "var(--text-muted)")
-        .text("References sizes (Rⱼ):");
+        .text("Reference sizes (Rⱼ):");
 
-    let xCursor = startX + labelWidth;
-    refRadii.forEach(r => {
-        const circleR = sizeScale(r);
-        g.append("circle")
-            .attr("cx", xCursor + circleR)
-            .attr("cy", 0)
-            .attr("r", circleR)
+    positions.forEach(pos => {
+        svg.append("circle")
+            .attr("cx", pos.cx)
+            .attr("cy", pos.cy)
+            .attr("r", pos.circleR)
             .style("fill", "var(--accent-glow)")
             .style("opacity", 0.6);
 
-        g.append("text")
-            .attr("x", xCursor + circleR)
-            .attr("y", circleR + 12)
+        svg.append("text")
+            .attr("x", pos.cx)
+            .attr("y", pos.cy + pos.circleR + 12)
             .attr("text-anchor", "middle")
             .style("font-family", "var(--font-body)")
             .style("font-size", "10px")
             .style("fill", "var(--text-muted)")
-            .text(r);
-
-        xCursor += circleR * 2 + 20;
+            .text(pos.r);
     });
 }
 
