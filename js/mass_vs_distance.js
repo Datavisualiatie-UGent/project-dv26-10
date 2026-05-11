@@ -1,4 +1,3 @@
-
 async function buildScatterPlot() {
     const rawData = window.globalExoplanetData;
     if (!rawData || rawData.length === 0) return;
@@ -220,7 +219,7 @@ async function buildScatterPlot() {
         .style("letter-spacing", "1px")
         .style("fill", "var(--text-muted)");
         
-    yLabel.text("Earth masses");
+    yLabel.text("Mass (Earth masses)");
 
     // Reference planets
     const referencePlanets = [
